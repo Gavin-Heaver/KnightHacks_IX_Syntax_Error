@@ -22,12 +22,12 @@ import json                    # wave definition, (optional)
 import config
 from game.board import Board
 from game import events
-from ai.flowField import buildField
 from entities.enemy import Enemy
-from ui.debugOverlay import drawFlowArrows
+from ui.debugOverlay import drawFlowArrows, drawHeatmap
 from game.gameState import GameState
 from game.waves import WaveSpawner
 from ai.costLayers import buildFields
+from ai.pheromone import PheromoneMap
 
 ###DEBUG
 from entities.tools import Turret, Firewall, Debugger
@@ -61,43 +61,50 @@ startMenu = StartMenu(config.SCREEN_W, config.SCREEN_H)
 gameState = GameState()
 codeEditor = CodeEditor(uiManager)
 hud = HUD()
-showOverlay = False
+overlayMode = 0                 # F1 cycles: 0 = off, 1 = flow arrows, 2 = fear heatmap
 enemies = []                    # game.enemies: list[Enemy]
 projectiles = []
 selectedTool = None
 waveSpawner = WaveSpawner()
-waveCountdown = None
-bannerFont = pygame.font.SysFont("consolas", 28, bold=True)
+waveCountdown = None            # seconds until the next wave auto-starts; None = waiting for Enter
 paused = False
+bannerFont = pygame.font.SysFont("consolas", 28, bold=True)
 pauseFont = pygame.font.SysFont("consolas", 64, bold=True)
 hintFont = pygame.font.SysFont("consolas", 20)
-fields = buildFields(board)
+
+pheromones = PheromoneMap(board.width, board.height)   # fear left by dead enemies
+aiTimer = 0.0                                          # counts up to AI_TICK_SECONDS
+fields = buildFields(board, pheromones.grid)           # one flow field per enemy type
+
 
 def beginWave():
     global phase
     waveSpawner.start(gameState.wave)
     phase = config.PHASE_WAVE
 
+
 def resetGame():
     global board, gameState, enemies, projectiles, waveSpawner
-    global waveCountdown, selectedTool, paused, phase, fields
+    global waveCountdown, selectedTool, paused, phase, fields, pheromones, aiTimer
 
+    # the old GameState / PheromoneMap are still subscribed to events -- clear them first
     events.clearAll()
     events.subscribe("toolDestroyed", onToolDestroyed)
 
     random.seed(config.DEMO_SEED)
     board = Board()
-    gameState = GameState()
+    gameState = GameState()                              # re-subscribes itself
     enemies = []
     projectiles = []
     waveSpawner = WaveSpawner()
     waveCountdown = None
     selectedTool = None
     codeEditor.close()
-    fields = buildFields(board)
+    pheromones = PheromoneMap(board.width, board.height)  # re-subscribes itself
+    aiTimer = 0.0
+    fields = buildFields(board, pheromones.grid)
     paused = False
     phase = config.PHASE_MENU
-
 
 
 def tileRect(x, y):
@@ -109,18 +116,17 @@ def drawBoard():
     mx, my = pygame.mouse.get_pos()
     hoverX = (mx - config.BOARD_X) // config.TILE
     hoverY = (my - config.BOARD_Y) // config.TILE
-    board.inBounds(hoverX, hoverY)
 
-    if board.inBounds(hoverX, hoverY) is True and phase != config.PHASE_MENU:
+    if board.inBounds(hoverX, hoverY) and phase != config.PHASE_MENU:
         centerPixelX = config.BOARD_X + (hoverX + 0.5) * config.TILE
         centerPixelY = config.BOARD_Y + (hoverY + 0.5) * config.TILE
 
-        if (board.isBuildable(hoverX, hoverY)):
+        if board.isBuildable(hoverX, hoverY):
             previewColor = (180, 255, 180)
             pygame.draw.rect(screen, previewColor, tileRect(hoverX, hoverY), width=2)
             radius = int(5.0 * config.TILE)
             pygame.draw.circle(screen, previewColor, (int(centerPixelX), int(centerPixelY)), radius, width=1)
-        else: 
+        else:
             previewColor = (255, 70, 70)
             pygame.draw.rect(screen, previewColor, tileRect(hoverX, hoverY), width=2)
 
@@ -156,7 +162,7 @@ def drawBoard():
 
         pygame.draw.circle(screen, (255, 255, 120), (int(selCenterX), int(selCenterY)), selRadius, width=1)
 
-#main loop
+
 #main loop
 while running:
     dt = clock.tick(config.FPS) / 1000.0
@@ -211,8 +217,9 @@ while running:
             enemies.append(Enemy("bug", x + 0.5, y + 0.5))
         ###DEBUG
 
+        # F1 cycles the AI overlay: off -> flow arrows -> fear heatmap -> off
         elif event.type == pygame.KEYDOWN and event.key == pygame.K_F1:
-            showOverlay = not showOverlay
+            overlayMode = (overlayMode + 1) % 3
 
         ###DEBUG
         elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -257,9 +264,16 @@ while running:
             shopPanel.update(gameState, selectedTool)
             uiManager.update(dt)
 
-            # flow fields are rebuilt only when the board changes (see board.dirty)
-            if board.dirty:
-                fields = buildFields(board)
+            # AI tick: pheromones fade + spread every AI_TICK_SECONDS
+            aiTimer += dt
+            aiTick = aiTimer >= config.AI_TICK_SECONDS
+            if aiTick:
+                aiTimer = 0.0
+                pheromones.tick()
+
+            # rebuild flow fields when the board changes, or when fear has shifted
+            if board.dirty or (aiTick and pheromones.isActive()):
+                fields = buildFields(board, pheromones.grid)
                 board.dirty = False
 
             for tool in board.allTools():
@@ -276,13 +290,14 @@ while running:
                 e.update(dt, board, fields[e.type], enemies)
             enemies = [e for e in enemies if e.alive]
 
-            # wave cleared -> pay out and start the countdown
+            # wave cleared -> pay out, keep some fear for next wave, start the countdown
             if waveSpawner.active and waveSpawner.isDone(enemies):
                 waveSpawner.active = False
                 gameState.addBytes(config.WAVE_CLEAR_BONUS)
                 gameState.wave += 1
                 phase = config.PHASE_BUILD
                 waveCountdown = config.WAVE_BREAK_SECONDS
+                pheromones.carryOver()
 
             # between waves -> count down, then start the next one automatically
             elif waveCountdown is not None:
@@ -294,8 +309,12 @@ while running:
         # ---- draw (always, even while paused)
         screen.fill(config.COLOR_BG)
         drawBoard()
-        if showOverlay:
+
+        if overlayMode == 1:
             drawFlowArrows(screen, board, fields["bug"])
+        elif overlayMode == 2:
+            drawHeatmap(screen, pheromones.grid)
+
         hud.draw(screen, gameState)
 
         # wave banner: "PRESS ENTER TO BEGIN" before wave 1, countdown between waves
