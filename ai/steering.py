@@ -11,3 +11,14 @@ def separation(enemy, enemies, radius):
             sy += dy / d * strength
 
     return sx, sy
+
+def clearPath(board, x0, y0, x1, y1, stepSize = 0.25):
+    dx, dy = x1 - x0, y1 - y0
+    length = math.hypot(dx, dy)
+    samples = max(1, int(length / stepSize))
+    for i in range(1, samples + 1):
+        t = i / samples
+        if board.toolAt(math.floor(x0 + dx * t), math.floor(y0 + dy * t)):
+            return False
+
+    return True
