@@ -101,6 +101,19 @@ BENCH_ENEMY_COUNT = 50
 # ---------------------------------------------------------------- scripting
 CODE_UNLOCK_COSTS = {"if": 20, "for": 40, "while": 40, "memory": 30}
 
+# ---------------------------------------------------------------- wave prefabs
+WAVE_BASE_BUDGET = 20
+WAVE_BUDGET_GROWTH = 1.25
+ENEMY_COSTS   = {"bug": 2, "injection": 4, "zeroDay": 5, "memoryLeak": 8}
+ENEMY_UNLOCK  = {"bug": 1, "injection": 3, "zeroDay": 4, "memoryLeak": 3}   # wave each is unlocked
+ENEMY_WEIGHTS = {"bug": 6, "injection": 2, "zeroDay": 2, "memoryLeak": 1}   # how often each gets picked
+
+SPAWN_INTERVAL_BASE = .8
+SPAWN_INTERVAL_DECAY = .93
+SPAWN_INTERVAL_FLOOR = .2
+
+STRAGGLER_CHANCE = 0.1
+
 # ---------------------------------------------------------------- colors
 COLOR_BG = (14, 18, 24)
 COLOR_GRID = (28, 36, 46)
