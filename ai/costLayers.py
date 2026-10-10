@@ -23,7 +23,7 @@ def buildFireLayer(board):
 
     return fire
 
-def makeCost(board, enemyType, fire):
+def makeCost(board, enemyType, fire, fear):
     w = config.AI_WEIGHTS[enemyType]
 
     def cost(x, y):
@@ -39,15 +39,23 @@ def makeCost(board, enemyType, fire):
         if tool is not None:
             c += w["wall"] * tool.hp / config.BUG_DPS
         c += w["fire"] * fire[y][x]
+        c += w["fear"] * fear[y][x]
         return c
 
     return cost
         
 
-def buildFields(board):
+def buildFields(board, fear):
     fire = buildFireLayer(board)
     fields = {}
     for enemyType in config.AI_WEIGHTS:
-        fields[enemyType] = buildField(board, board.cpuTiles, makeCost(board, enemyType, fire))
+        fields[enemyType] = buildField(board, board.cpuTiles, makeCost(board, enemyType, fire, fear))
 
+    return fields
+
+def buildFields(board, fear):
+    fire = buildFireLayer(board)
+    fields = {}
+    for enemyType in config.AI_WEIGHTS:
+        fields[enemyType] = buildField(board, board.cpuTiles, makeCost(board, enemyType, fire, fear))
     return fields
