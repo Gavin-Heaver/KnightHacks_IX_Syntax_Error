@@ -28,7 +28,7 @@ from game.gameState import GameState
 from entities.tools import Turret
 ###DEBUG
 from ui.menu import StartMenu
-
+from ui.hud import HUD
 from ui.editor import CodeEditor
 
 #setup
@@ -64,6 +64,7 @@ phase = config.PHASE_MENU
 startMenu = StartMenu(config.SCREEN_W, config.SCREEN_H)
 gameState = GameState()
 codeEditor = CodeEditor(uiManager)
+hud = HUD()
 showOverlay = False
 enemies = []                    # game.enemies: list[Enemy]
 projectiles = []
@@ -207,6 +208,7 @@ while running:
 
         screen.fill(config.COLOR_BG)
         drawBoard()
+        hud.draw(screen, gameState)
         if showOverlay:
             drawFlowArrows(screen, board, dist)
         uiManager.draw_ui(screen)
