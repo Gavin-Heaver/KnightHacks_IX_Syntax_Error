@@ -126,3 +126,13 @@ COLOR_ENEMY = (255, 90, 90)
 COLOR_TEXT = (220, 230, 240)
 COLOR_ERROR = (255, 70, 70)
 
+#Temps until art is made
+COLOR_TURRET = (90, 160, 255) #blue
+COLOR_FIREWALL = (255, 130, 40) #Orange
+COLOR_DEBUGGER = (185, 100, 255) #purple
+
+TOOL_COLORS = {
+    "turret": COLOR_TURRET,
+    "firewall": COLOR_FIREWALL,
+    "debugger": COLOR_DEBUGGER,
+}
