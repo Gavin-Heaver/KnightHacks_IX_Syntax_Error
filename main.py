@@ -42,17 +42,22 @@ def tileRect(x, y):
 
 
 def drawBoard():
+    # Board outer boundary frame
+    boardOutline = pygame.Rect(config.BOARD_X - 1, config.BOARD_Y - 1,
+                               config.BOARD_PX_W + 2, config.BOARD_PX_H + 2)
+    pygame.draw.rect(screen, (40, 55, 75), boardOutline, 2)
+
     for y in range(board.height):
         for x in range(board.width):
             pygame.draw.rect(screen, config.COLOR_GRID, tileRect(x, y), 1)
     for (x, y) in board.cpuTiles:
-        pygame.draw.rect(screen, config.COLOR_CPU, tileRect(x, y).inflate(-4, -4))
+        pygame.draw.rect(screen, config.COLOR_CPU, tileRect(x, y).inflate(-2, -2))
     for tool in board.allTools():
-        pygame.draw.rect(screen, config.COLOR_TOOL, tileRect(tool.x, tool.y).inflate(-8, -8))
+        pygame.draw.rect(screen, config.COLOR_TOOL, tileRect(tool.x, tool.y).inflate(-4, -4))
     for e in enemies:
         px = config.BOARD_X + e.x * config.TILE
         py = config.BOARD_Y + e.y * config.TILE
-        pygame.draw.circle(screen, config.COLOR_ENEMY, (int(px), int(py)), config.TILE // 4)
+        pygame.draw.circle(screen, config.COLOR_ENEMY, (int(px), int(py)), config.TILE // 3)
 
 
 #main loop
@@ -61,6 +66,8 @@ while running:
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            running = False
+        elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             running = False
         uiManager.process_events(event)
 
