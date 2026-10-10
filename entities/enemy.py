@@ -3,10 +3,9 @@
 import config
 import math
 import random
-import config
 from game import events
 from ai.flowField import nextStep
-from ai.steering import separation
+from ai.steering import separation, clearPath
 
 
 class Enemy:
@@ -24,6 +23,12 @@ class Enemy:
         self.alive = True
         self.offsetX = random.uniform(-0.3, 0.3)
         self.offsetY = random.uniform(-0.3, 0.3)
+        angle = random.uniform(0, 2 * math.pi)
+        cpuCenterX = config.CPU_X + config.CPU_W / 2
+        cpuCenterY = config.CPU_Y + config.CPU_H / 2
+        ringRadius = max(config.CPU_W, config.CPU_H) / 2 + 0.6   # just outside the CPU
+        self.spotX = cpuCenterX + math.cos(angle) * ringRadius
+        self.spotY = cpuCenterY + math.sin(angle) * ringRadius
 
     def takeDamage(self, n):
         if not self.alive:
@@ -41,7 +46,23 @@ class Enemy:
         #finding which tile subject is positioned
         tileX, tileY = int(self.x), int(self.y)
 
-        sepX, sepY = separation(self, enemies, config.SEPARATION_RADIUS)
+        spotFree = board.toolAt(math.floor(self.spotX), math.floor(self.spotY)) is None
+        approaching = dist[tileY][tileX] <= config.APPROACH_RANGE and spotFree and clearPath(board, self.x, self.y, self.spotX, self.spotY)
+
+        if approaching:
+            sepX, sepY = separation(self, enemies, config.SWARM_SEP_RADIUS)
+            sepWeight = config.SWARM_SEP_WEIGHT
+        else:
+            sepX, sepY = separation(self, enemies, config.SEPARATION_RADIUS)
+            sepWeight = config.SEPARATION_WEIGHT
+
+        if approaching:
+            if math.hypot(self.spotX - self.x, self.spotY - self.y) <= config.ATTACK_RANGE:
+                events.emit("cpuHit", self, self.dps * dt)
+                self._nudge(board, sepX, sepY, dt)
+            else:
+                self._steerToward(board, self.spotX, self.spotY, sepX, sepY, sepWeight, dt)
+            return
 
         #finding the gradient pointing towards the CPU- if none, stay put
         step = nextStep(dist, board, tileX, tileY)
@@ -66,22 +87,9 @@ class Enemy:
 
         #finding center of tile
         targetX, targetY = targetTX + 0.5 + self.offsetX, targetTY + 0.5 + self.offsetY
-        #calculating vector between source and target
-        vx, vy = targetX - self.x, targetY - self.y
-        #calculating distance of vector
-        distance = math.hypot(vx, vy)
-        if distance > 0:
-            vx, vy = vx / distance, vy / distance
 
-        dirX = vx + config.SEPARATION_WEIGHT * sepX
-        dirY = vy + config.SEPARATION_WEIGHT * sepY
-        distance = math.hypot(dirX, dirY)
-        if distance == 0:
-            return
 
-        #finding maximum distance able to be moved on current frame
-        move = self.speed * dt
-        self._tryMove(board, self.x + dirX / distance * move, self.y + dirY / distance * move)
+        self._steerToward(board, targetX, targetY, sepX, sepY, sepWeight, dt)
 
 
     def _nudge(self, board, sepX, sepY, dt):
@@ -96,6 +104,20 @@ class Enemy:
             self.x = newX
         if self._walkable(board, self.x, newY):
             self.y = newY
+
+    def _steerToward(self, board, targetX, targetY, sepX, sepY, sepWeight,dt):
+        """Walk toward (targetX, targetY), blended with separation."""
+        vx, vy = targetX - self.x, targetY - self.y
+        distance = math.hypot(vx, vy)
+        if distance > 0:
+            vx, vy = vx / distance, vy / distance
+        dirX = vx + sepWeight * sepX
+        dirY = vy + sepWeight * sepY
+        length = math.hypot(dirX, dirY)
+        if length == 0:
+            return
+        move = self.speed * dt
+        self._tryMove(board, self.x + dirX / length * move, self.y + dirY / length * move)
 
     @staticmethod
     def _walkable(board, fx, fy):
