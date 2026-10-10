@@ -22,11 +22,14 @@ from game import events
 from ai.flowField import buildField
 from entities.enemy import Enemy
 from ui.debugOverlay import drawFlowArrows
+from game.gameState import GameState
 
 ###DEBUG
 from entities.tools import Turret
 ###DEBUG
 from ui.menu import StartMenu
+
+from ui.editor import CodeEditor
 
 #setup
 random.seed(config.DEMO_SEED)   # deterministic demo (use only `random` for randomness)
@@ -59,6 +62,8 @@ events.subscribe("toolDestroyed", onToolDestroyed)
 
 phase = config.PHASE_MENU
 startMenu = StartMenu(config.SCREEN_W, config.SCREEN_H)
+gameState = GameState()
+codeEditor = CodeEditor(uiManager)
 showOverlay = False
 enemies = []                    # game.enemies: list[Enemy]
 projectiles = []
@@ -137,6 +142,7 @@ while running:
                 running = False
         else:
             uiManager.process_events(event)
+            codeEditor.handleEvent(event)
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 phase = config.PHASE_MENU   # ESC returns to main menu
@@ -156,17 +162,25 @@ while running:
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 tx = (event.pos[0] - config.BOARD_X) // config.TILE
                 ty = (event.pos[1] - config.BOARD_Y) // config.TILE
-                if event.button == 1:
+                if event.button == 1: #left click
                     existing = board.toolAt(tx, ty)
                     if existing != None:
                             selectedTool = existing
+                            if getattr(existing, "programmable", False):
+                                codeEditor.open(existing)
                     if existing == None and board.isBuildable(tx,ty):
-                        board.place(Turret(tx, ty), tx, ty)
+                        turretCost = config.TOOL_STATS["turret"]["cost"]
+                        if gameState.spendBytes(turretCost):
+                            board.place(Turret(tx, ty), tx, ty)
                         selectedTool = None
+                        codeEditor.close()
 
-                elif event.button == 3:
+                elif event.button == 3: #right click
+                    removedTool = board.remove(tx, ty)
+                    if removedTool:
+                        gameState.refundBytes(removedTool.spent)
                     selectedTool = None
-                    board.remove(tx, ty)     
+                    codeEditor.close() 
             ###DEBUG
 
     if phase == config.PHASE_MENU:
