@@ -124,8 +124,11 @@ def drawBoard():
         if board.isBuildable(hoverX, hoverY):
             previewColor = (180, 255, 180)
             pygame.draw.rect(screen, previewColor, tileRect(hoverX, hoverY), width=2)
-            radius = int(5.0 * config.TILE)
-            pygame.draw.circle(screen, previewColor, (int(centerPixelX), int(centerPixelY)), radius, width=1)
+            
+            toolRange = config.TOOL_STATS[shopPanel.selectedToolType]["range"]
+            if toolRange > 0:
+                radius = int(toolRange * config.TILE)
+                pygame.draw.circle(screen, previewColor, (int(centerPixelX), int(centerPixelY)), radius, width=1)
         else:
             previewColor = (255, 70, 70)
             pygame.draw.rect(screen, previewColor, tileRect(hoverX, hoverY), width=2)
@@ -141,7 +144,8 @@ def drawBoard():
     for (x, y) in board.cpuTiles:
         pygame.draw.rect(screen, config.COLOR_CPU, tileRect(x, y).inflate(-2, -2))
     for tool in board.allTools():
-        pygame.draw.rect(screen, config.COLOR_TOOL, tileRect(tool.x, tool.y).inflate(-4, -4))
+        color = config.TOOL_COLORS.get(tool.kind, config.COLOR_TOOL)
+        pygame.draw.rect(screen, color, tileRect(tool.x, tool.y).inflate(-4, -4))
     for e in enemies:
         px = config.BOARD_X + e.x * config.TILE
         py = config.BOARD_Y + e.y * config.TILE
@@ -196,7 +200,10 @@ while running:
         if not codeEditor.isOpen:
             shopPanel.panel.show()
         action = shopPanel.handleEvent(event, gameState, selectedTool, board)
-        if action == "deselected":
+        if action == "open_compiler" and selectedTool is not None:
+            codeEditor.open(selectedTool)
+            shopPanel.panel.hide()
+        elif action == "deselected":
             selectedTool = None
             codeEditor.close()
 
@@ -229,9 +236,10 @@ while running:
                 existing = board.toolAt(tx, ty)
                 if existing is not None:
                     selectedTool = existing
-                    if getattr(existing, "programmable", False):
-                        codeEditor.open(existing)
-                        shopPanel.panel.hide()
+                    codeEditor.close()
+                    shopPanel.panel.show()
+                elif board.isBuildable(tx, ty):
+                    toolType = shopPanel.selectedToolType
                 if existing is None and board.isBuildable(tx, ty):
                     toolType = shopPanel.selectedToolType
                     cost = config.TOOL_STATS[toolType]["cost"]
