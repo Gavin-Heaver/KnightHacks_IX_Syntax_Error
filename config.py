@@ -83,10 +83,10 @@ BUG_DPS = ENEMY_STATS["bug"]["dps"]   # used by L_wall = tool.hp / BUG_DPS
 # ---------------------------------------------------------------- AI: cost weights
 # order of weights per enemy type: wall, fire, fear, crowd
 AI_WEIGHTS = {
-    "bug":        {"wall": 1.0, "fire": 0.2, "fear": 0.5, "crowd": 0.5},
+    "bug":        {"wall": 1.0, "fire": 0.15, "fear": 0.5, "crowd": 0.5},
     "memoryLeak": {"wall": 0.3, "fire": 0.0, "fear": 0.0, "crowd": 0.0},
     "zeroDay":    {"wall": 1.0, "fire": 1.0, "fear": 1.0, "crowd": 1.0},
-    "injection":  {"wall": 0.0, "fire": 2.0, "fear": 2.0, "crowd": 1.5},
+    "injection":  {"wall": 1.0, "fire": 2.0, "fear": 2.0, "crowd": 1.5},
 }
 CROWD_CAP = 4.0
 JUMP_COST = 3.0
