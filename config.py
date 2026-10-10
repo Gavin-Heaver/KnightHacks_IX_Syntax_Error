@@ -72,12 +72,16 @@ FIREWALL_MAX_LEN = 5
 # ---------------------------------------------------------------- enemies
 # hp, speed (tiles/sec), bytes reward, damage per second to tools/CPU
 ENEMY_STATS = {
-    "bug":        {"hp": 20,  "speed": 1.6, "reward": 5,  "dps": 4.0},
-    "memoryLeak": {"hp": 120, "speed": 0.8, "reward": 20, "dps": 6.0},
-    "zeroDay":    {"hp": 40,  "speed": 1.4, "reward": 15, "dps": 5.0},
-    "injection":  {"hp": 10,  "speed": 2.8, "reward": 10, "dps": 0.0},
+    "bug":        {"hp": 20,  "speed": 1.6, "reward": 5,  "dps": 4.0, "size": .30},
+    "memoryLeak": {"hp": 120, "speed": 0.8, "reward": 20, "dps": 6.0, "size": .75},
+    "zeroDay":    {"hp": 40,  "speed": 1.4, "reward": 15, "dps": 5.0, "size": .35},
+    "injection":  {"hp": 10,  "speed": 2.8, "reward": 10, "dps": 0.0, "size": .20},
 }
-MEMORY_LEAK_SPLIT_COUNT = 3
+
+SPEED_VARIANCE = 0.15
+SIZE_VARIANCE = 0.15
+MEMORY_LEAK_SPLIT_COUNT = 3.0
+ML_SPLIT_VARIANCE = 1.5
 BUG_DPS = ENEMY_STATS["bug"]["dps"]   # used by L_wall = tool.hp / BUG_DPS
 
 # ---------------------------------------------------------------- AI: cost weights

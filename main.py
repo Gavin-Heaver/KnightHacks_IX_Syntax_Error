@@ -149,7 +149,8 @@ def drawBoard():
     for e in enemies:
         px = config.BOARD_X + e.x * config.TILE
         py = config.BOARD_Y + e.y * config.TILE
-        pygame.draw.circle(screen, config.COLOR_ENEMY, (int(px), int(py)), config.TILE // 3)
+        radius = max(2, int(e.size * config.TILE))
+        pygame.draw.circle(screen, config.COLOR_ENEMY, (int(px), int(py)), radius)
 
     for p in projectiles:
         px = config.BOARD_X + p.x * config.TILE
