@@ -99,7 +99,7 @@ def resetGame():
     gameState = GameState()
     enemies = []
     projectiles = []
-    waveSpawner = WaveSpawner
+    waveSpawner = WaveSpawner()
     waveCountdown = None
     selectedTool = None
     codeEditor.close()
@@ -166,121 +166,171 @@ def drawBoard():
         pygame.draw.circle(screen, (255, 255, 120), (int(selCenterX), int(selCenterY)), selRadius, width=1)
 
 #main loop
+#main loop
 while running:
     dt = clock.tick(config.FPS) / 1000.0
 
+    # ================================================================ INPUT
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
 
+        # ---- main menu
         if phase == config.PHASE_MENU:
             action = startMenu.handleEvent(event)
             if action == "play":
                 phase = config.PHASE_BUILD
             elif action == "quit":
                 running = False
-        else:
-            uiManager.process_events(event)
-            codeEditor.handleEvent(event)
-            if not codeEditor.isOpen:
-                shopPanel.panel.show()  
-            action = shopPanel.handleEvent(event, gameState, selectedTool, board)
-            if action == "deselected":
+            continue
+
+        # ---- paused: only ENTER (resume) and ESC (quit to menu) do anything
+        if paused:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    paused = False
+                elif event.key == pygame.K_ESCAPE:
+                    resetGame()
+            continue
+
+        # ---- in game: UI first (Gavin's editor + shop)
+        uiManager.process_events(event)
+        codeEditor.handleEvent(event)
+        if not codeEditor.isOpen:
+            shopPanel.panel.show()
+        action = shopPanel.handleEvent(event, gameState, selectedTool, board)
+        if action == "deselected":
+            selectedTool = None
+            codeEditor.close()
+
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            paused = True
+
+        # ENTER starts the first wave only (later waves start themselves after the countdown)
+        elif (event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN
+              and gameState.wave == 1 and not waveSpawner.active
+              and waveCountdown is None and not codeEditor.isOpen):
+            beginWave()
+
+        ###DEBUG
+        elif event.type == pygame.KEYDOWN and event.key == pygame.K_b:
+            edges = [(x, y) for x in range(board.width) for y in (0, board.height - 1)] + \
+                    [(x, y) for y in range(board.height) for x in (0, board.width - 1)]
+            x, y = random.choice([t for t in edges if board.isBuildable(*t)])
+            enemies.append(Enemy("bug", x + 0.5, y + 0.5))
+        ###DEBUG
+
+        elif event.type == pygame.KEYDOWN and event.key == pygame.K_F1:
+            showOverlay = not showOverlay
+
+        ###DEBUG
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            tx = (event.pos[0] - config.BOARD_X) // config.TILE
+            ty = (event.pos[1] - config.BOARD_Y) // config.TILE
+            if event.button == 1:   # left click
+                existing = board.toolAt(tx, ty)
+                if existing is not None:
+                    selectedTool = existing
+                    if getattr(existing, "programmable", False):
+                        codeEditor.open(existing)
+                        shopPanel.panel.hide()
+                if existing is None and board.isBuildable(tx, ty):
+                    toolType = shopPanel.selectedToolType
+                    cost = config.TOOL_STATS[toolType]["cost"]
+                    if gameState.spendBytes(cost):
+                        if toolType == "turret":
+                            board.place(Turret(tx, ty), tx, ty)
+                        elif toolType == "firewall":
+                            board.place(Firewall(tx, ty), tx, ty)
+                        elif toolType == "debugger":
+                            board.place(Debugger(tx, ty), tx, ty)
+                    selectedTool = None
+                    codeEditor.close()
+                    shopPanel.panel.show()
+
+            elif event.button == 3:   # right click
+                removedTool = board.remove(tx, ty)
+                if removedTool:
+                    gameState.refundBytes(removedTool.spent)
                 selectedTool = None
                 codeEditor.close()
+        ###DEBUG
 
-            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                phase = config.PHASE_MENU   # ESC returns to main menu
-
-            ###DEBUG
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_b:
-                edges = [(x, y) for x in range(board.width) for y in (0, board.height - 1)] + \
-                    [(x, y) for y in range(board.height) for x in (0, board.width - 1)]
-                x, y = random.choice([t for t in edges if board.isBuildable(*t)])
-                enemies.append(Enemy("bug", x + 0.5, y + 0.5))
-            ###DEBUG
-
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_F1:
-                showOverlay = not showOverlay
-
-            ###DEBUG
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                tx = (event.pos[0] - config.BOARD_X) // config.TILE
-                ty = (event.pos[1] - config.BOARD_Y) // config.TILE
-                if event.button == 1: #left click
-                    existing = board.toolAt(tx, ty)
-                    if existing != None:
-                            selectedTool = existing
-                            if getattr(existing, "programmable", False):
-                                codeEditor.open(existing)
-                                shopPanel.panel.hide()
-                    if existing == None and board.isBuildable(tx,ty):
-                        toolType = shopPanel.selectedToolType
-                        cost = config.TOOL_STATS[toolType]["cost"]
-
-                        if gameState.spendBytes(cost):
-                            if toolType == "turret":
-                                board.place(Turret(tx, ty), tx, ty)
-                            elif toolType == "firewall":
-                                board.place(Firewall(tx, ty), tx, ty)
-                            elif toolType == "debugger":
-                                board.place(Debugger(tx, ty), tx, ty)
-                                
-                        selectedTool = None
-                        codeEditor.close()
-                        shopPanel.panel.show()
-
-                elif event.button == 3: #right click
-                    removedTool = board.remove(tx, ty)
-                    if removedTool:
-                        gameState.refundBytes(removedTool.spent)
-                    selectedTool = None
-                    codeEditor.close() 
-            ###DEBUG
-
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_n and not waveSpawner.active:
-                waveSpawner.start(gameState.wave)
-                phase = config.PHASE_WAVE
-                print(f"Wave {gameState.wave}: {waveSpawner.modifier} from {waveSpawner.edges}")   # until there's a HUD
-
-
+    # ================================================================ UPDATE + DRAW
     if phase == config.PHASE_MENU:
         startMenu.draw(screen)
+
     else:
-        shopPanel.update(gameState, selectedTool)
-        uiManager.update(dt)
+        # ---- update (skipped entirely while paused, so everything freezes)
+        if not paused:
+            shopPanel.update(gameState, selectedTool)
+            uiManager.update(dt)
 
-        # flow fields are rebuilt only when the board changes (see board.dirty)
-        if board.dirty:
-            dist = buildField(board, board.cpuTiles, bugCost)
-            board.dirty = False
+            # flow fields are rebuilt only when the board changes (see board.dirty)
+            if board.dirty:
+                dist = buildField(board, board.cpuTiles, bugCost)
+                board.dirty = False
 
-        for tool in board.allTools():
-            if hasattr(tool, "update"):
-                tool.update(dt, enemies, projectiles)
+            for tool in board.allTools():
+                if hasattr(tool, "update"):
+                    tool.update(dt, enemies, projectiles)
 
-        for p in projectiles:
-            p.update(dt, enemies, board)
-        projectiles = [p for p in projectiles if p.alive]
+            for p in projectiles:
+                p.update(dt, enemies, board)
+            projectiles = [p for p in projectiles if p.alive]
 
-        waveSpawner.update(dt, board, enemies)
+            waveSpawner.update(dt, board, enemies)
 
-        for e in enemies:
-            e.update(dt, board, dist, enemies)
-        enemies = [e for e in enemies if e.alive]
+            for e in enemies:
+                e.update(dt, board, dist, enemies)
+            enemies = [e for e in enemies if e.alive]
 
-        if waveSpawner.active and waveSpawner.isDone(enemies):
-            waveSpawner.active = False
-            gameState.addBytes(config.WAVE_CLEAR_BONUS)
-            gameState.wave += 1
-            phase = config.PHASE_BUILD
+            # wave cleared -> pay out and start the countdown
+            if waveSpawner.active and waveSpawner.isDone(enemies):
+                waveSpawner.active = False
+                gameState.addBytes(config.WAVE_CLEAR_BONUS)
+                gameState.wave += 1
+                phase = config.PHASE_BUILD
+                waveCountdown = config.WAVE_BREAK_SECONDS
 
+            # between waves -> count down, then start the next one automatically
+            elif waveCountdown is not None:
+                waveCountdown -= dt
+                if waveCountdown <= 0:
+                    waveCountdown = None
+                    beginWave()
+
+        # ---- draw (always, even while paused)
         screen.fill(config.COLOR_BG)
         drawBoard()
-        hud.draw(screen, gameState)
         if showOverlay:
             drawFlowArrows(screen, board, dist)
+        hud.draw(screen, gameState)
+
+        # wave banner: "PRESS ENTER TO BEGIN" before wave 1, countdown between waves
+        if phase == config.PHASE_BUILD:
+            msg = None
+            if waveCountdown is not None:
+                msg = f"WAVE {gameState.wave} IN {math.ceil(waveCountdown)}"
+            elif gameState.wave == 1:
+                msg = "PRESS ENTER TO BEGIN"
+            if msg:
+                text = bannerFont.render(msg, True, config.COLOR_TEXT)
+                screen.blit(text, text.get_rect(center=(config.BOARD_X + config.BOARD_PX_W // 2,
+                                                        config.BOARD_Y + 30)))
+
         uiManager.draw_ui(screen)
+
+        # pause overlay on top of everything (including the shop/editor panels)
+        if paused:
+            shade = pygame.Surface((config.SCREEN_W, config.SCREEN_H), pygame.SRCALPHA)
+            shade.fill((0, 0, 0, 150))
+            screen.blit(shade, (0, 0))
+            cx, cy = config.SCREEN_W // 2, config.SCREEN_H // 2
+            title = pauseFont.render("PAUSED", True, config.COLOR_TEXT)
+            hint = hintFont.render("ENTER  resume     ESC  quit to menu", True, (150, 170, 190))
+            screen.blit(title, title.get_rect(center=(cx, cy - 20)))
+            screen.blit(hint, hint.get_rect(center=(cx, cy + 35)))
 
     pygame.display.flip()
 

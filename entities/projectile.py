@@ -47,6 +47,10 @@ class Projectile:
             self.alive = False
             return
 
+        if board and board.isCpu(math.floor(self.x), math.floor(self.y)):
+            self.alive = False
+            return
+
         # Check collision against enemies
         for enemy in allEnemies:
             if not getattr(enemy, "alive", True):

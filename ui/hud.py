@@ -51,7 +51,7 @@ class HUD:
 
         #Status based on current phase
         if gameState.phase == config.PHASE_BUILD:
-            statusSurf = self.smallFont.render("[SPACE] Start Wave", True, (70, 200, 120))
+            statusSurf = self.smallFont.render("[ENTER] Start Wave", True, (70, 200, 120))
         elif gameState.phase == config.PHASE_WAVE:
             statusSurf = self.smallFont.render("DEFENDING CPU...", True, (255, 120, 80))
         elif gameState.phase == config.PHASE_GAME_OVER:
