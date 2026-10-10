@@ -1,9 +1,10 @@
 # entities/tools.py -- DefenseTool base (+ Turret, Debugger by Gavin; Firewall by Tadhg).
 import config
+import math
 from game import events
 
 from scripting.runner import TowerScript
-from scripting.defaults import DEFAULT_TURRET_SCRIPT
+from scripting.defaults import DEFAULT_TURRET_SCRIPT, DEFAULT_DEBUGGER_SCRIPT
 from entities.projectile import Projectile
 
 
@@ -122,3 +123,43 @@ class Turret(DefenseTool):
                 newProjectilesList.append(bullet)
                 self.fireCooldown = 1.0 / self.fireRate
             self.wantsToFire = False
+
+class Firewall(DefenseTool):
+    """Heavy defensive wall that completely blocks bug movement."""
+    programmable = False
+    def __init__(self, x=0, y=0):
+        super().__init__("firewall", x, y)
+        self.tier = 0
+    def update(self, dt, allEnemies, newProjectilesList, unlockedConcepts=None):
+        # Firewalls have no scripts or weapons; they simply block bugs
+        pass
+
+class Debugger(DefenseTool):
+    """
+    Programmable support tower.
+    Reveals hidden enemy types and slows bugs within its scanner range.
+    """
+    programmable = True
+    def __init__(self, x=0, y=0):
+        super().__init__("debugger", x, y)
+        self.tier = 0
+        self.cycleBudget = 30
+        self.script = TowerScript(DEFAULT_DEBUGGER_SCRIPT)
+        self.scriptTimer = 0.0
+        self.aimTarget = None
+        self.wantsToFire = False
+    def update(self, dt, allEnemies, newProjectilesList, unlockedConcepts=None):
+        # 1. Run Python script ~8x/sec
+        self.scriptTimer += dt
+        tickInterval = 1.0 / config.SCRIPT_TICKS_PER_SECOND
+        if self.scriptTimer >= tickInterval:
+            self.scriptTimer = 0.0
+            self.script.runTick(self, allEnemies, self.cycleBudget, unlockedConcepts)
+        # 2. Support Aura: scan enemies in range
+        cx, cy = self.x + 0.5, self.y + 0.5
+        for enemy in allEnemies:
+            if getattr(enemy, "alive", True):
+                dist = math.hypot(enemy.x - cx, enemy.y - cy)
+                if dist <= self.range:
+                    # Reveal enemy type to scripts
+                    enemy.revealed = True

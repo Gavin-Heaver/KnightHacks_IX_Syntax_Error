@@ -28,8 +28,9 @@ from ui.debugOverlay import drawFlowArrows
 from game.gameState import GameState
 
 ###DEBUG
-from entities.tools import Turret
+from entities.tools import Turret, Firewall, Debugger
 ###DEBUG
+from ui.shop import ShopPanel
 from ui.menu import StartMenu
 from ui.hud import HUD
 from ui.editor import CodeEditor
@@ -64,6 +65,7 @@ events.subscribe("toolDestroyed", onToolDestroyed)
 ### Move to game/board.py
 
 phase = config.PHASE_MENU
+shopPanel = ShopPanel(uiManager)
 startMenu = StartMenu(config.SCREEN_W, config.SCREEN_H)
 gameState = GameState()
 codeEditor = CodeEditor(uiManager)
@@ -147,6 +149,12 @@ while running:
         else:
             uiManager.process_events(event)
             codeEditor.handleEvent(event)
+            if not codeEditor.isOpen:
+                shopPanel.panel.show()  
+            action = shopPanel.handleEvent(event, gameState, selectedTool, board)
+            if action == "deselected":
+                selectedTool = None
+                codeEditor.close()
 
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 phase = config.PHASE_MENU   # ESC returns to main menu
@@ -172,12 +180,22 @@ while running:
                             selectedTool = existing
                             if getattr(existing, "programmable", False):
                                 codeEditor.open(existing)
+                                shopPanel.panel.hide()
                     if existing == None and board.isBuildable(tx,ty):
-                        turretCost = config.TOOL_STATS["turret"]["cost"]
-                        if gameState.spendBytes(turretCost):
-                            board.place(Turret(tx, ty), tx, ty)
+                        toolType = shopPanel.selectedToolType
+                        cost = config.TOOL_STATS[toolType]["cost"]
+
+                        if gameState.spendBytes(cost):
+                            if toolType == "turret":
+                                board.place(Turret(tx, ty), tx, ty)
+                            elif toolType == "firewall":
+                                board.place(Firewall(tx, ty), tx, ty)
+                            elif toolType == "debugger":
+                                board.place(Debugger(tx, ty), tx, ty)
+                                
                         selectedTool = None
                         codeEditor.close()
+                        shopPanel.panel.show()
 
                 elif event.button == 3: #right click
                     removedTool = board.remove(tx, ty)
@@ -190,6 +208,7 @@ while running:
     if phase == config.PHASE_MENU:
         startMenu.draw(screen)
     else:
+        shopPanel.update(gameState, selectedTool)
         uiManager.update(dt)
 
         # flow fields are rebuilt only when the board changes (see board.dirty)
