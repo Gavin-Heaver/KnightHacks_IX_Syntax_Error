@@ -12,7 +12,7 @@ class Projectile:
         self.maxRange = float(maxRange)
         self.distTraveled = 0.0
         self.alive = True
-        self.hitRadius = 0.4    # tile distance to register a hit
+        self.hitRadius = 0.1    # tile distance to register a hit
 
         # Calculate normalized straight-line velocity vector
         dx = targetX - startX
@@ -57,7 +57,7 @@ class Projectile:
                 continue
             # Distance from bullet (x, y) to enemy center
             d = math.hypot(self.x - enemy.x, self.y - enemy.y)
-            if d <= self.hitRadius:
+            if d <= self.hitRadius + enemy.size:
                 enemy.takeDamage(self.damage)
                 self.alive = False
                 break

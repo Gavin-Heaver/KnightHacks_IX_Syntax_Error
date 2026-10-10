@@ -16,9 +16,10 @@ class Enemy:
         self.y = y
         self.hp = stats["hp"]
         self.maxHp = stats["hp"]
-        self.speed = stats["speed"]
+        self.speed = stats["speed"] * random.uniform(1 - config.SPEED_VARIANCE, 1 + config.SPEED_VARIANCE)
         self.reward = stats["reward"]
         self.dps = stats["dps"]
+        self.size = stats["size"] * random.uniform(1 - config.SIZE_VARIANCE, 1 + config.SIZE_VARIANCE)
         self.revealed = False        # set by Debugger
         self.alive = True
         self.offsetX = random.uniform(-0.3, 0.3)
