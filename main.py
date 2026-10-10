@@ -27,6 +27,7 @@ from entities.enemy import Enemy
 from ui.debugOverlay import drawFlowArrows
 from game.gameState import GameState
 from game.waves import WaveSpawner
+from ai.costLayers import buildFields
 
 ###DEBUG
 from entities.tools import Turret, Firewall, Debugger
@@ -46,17 +47,6 @@ uiManager = pygame_gui.UIManager((config.SCREEN_W, config.SCREEN_H))
 running = True
 
 board = Board()
-
-###DEBUG
-def bugCost(x, y):
-    """TEMP: moves to ai/costLayers.py later. Tools are passable but expensive."""
-    tool = board.toolAt(x, y)
-    if tool:
-        return 1 + tool.hp / config.BUG_DPS   # seconds to chew through = the wall cost
-    return 1
-
-dist = buildField(board, board.cpuTiles, bugCost)
-###DEBUG
 
 ### Move to game/board.py
 def onToolDestroyed(tool):
@@ -81,6 +71,7 @@ bannerFont = pygame.font.SysFont("consolas", 28, bold=True)
 paused = False
 pauseFont = pygame.font.SysFont("consolas", 64, bold=True)
 hintFont = pygame.font.SysFont("consolas", 20)
+fields = buildFields(board)
 
 def beginWave():
     global phase
@@ -89,7 +80,7 @@ def beginWave():
 
 def resetGame():
     global board, gameState, enemies, projectiles, waveSpawner
-    global waveCountdown, dist, selectedTool, paused, phase
+    global waveCountdown, selectedTool, paused, phase, fields
 
     events.clearAll()
     events.subscribe("toolDestroyed", onToolDestroyed)
@@ -103,7 +94,7 @@ def resetGame():
     waveCountdown = None
     selectedTool = None
     codeEditor.close()
-    dist = buildField(board, board.cpuTiles, bugCost)
+    fields = buildFields(board)
     paused = False
     phase = config.PHASE_MENU
 
@@ -268,7 +259,7 @@ while running:
 
             # flow fields are rebuilt only when the board changes (see board.dirty)
             if board.dirty:
-                dist = buildField(board, board.cpuTiles, bugCost)
+                fields = buildFields(board)
                 board.dirty = False
 
             for tool in board.allTools():
@@ -282,7 +273,7 @@ while running:
             waveSpawner.update(dt, board, enemies)
 
             for e in enemies:
-                e.update(dt, board, dist, enemies)
+                e.update(dt, board, fields[e.type], enemies)
             enemies = [e for e in enemies if e.alive]
 
             # wave cleared -> pay out and start the countdown
@@ -304,7 +295,7 @@ while running:
         screen.fill(config.COLOR_BG)
         drawBoard()
         if showOverlay:
-            drawFlowArrows(screen, board, dist)
+            drawFlowArrows(screen, board, fields["bug"])
         hud.draw(screen, gameState)
 
         # wave banner: "PRESS ENTER TO BEGIN" before wave 1, countdown between waves
