@@ -114,6 +114,8 @@ SPAWN_INTERVAL_FLOOR = .2
 
 STRAGGLER_CHANCE = 0.1
 
+WAVE_BREAK_SECONDS = 15.0
+
 # ---------------------------------------------------------------- colors
 COLOR_BG = (14, 18, 24)
 COLOR_GRID = (28, 36, 46)
