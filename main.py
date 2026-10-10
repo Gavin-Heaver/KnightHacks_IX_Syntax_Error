@@ -55,6 +55,22 @@ def onToolDestroyed(tool):
 events.subscribe("toolDestroyed", onToolDestroyed)
 ### Move to game/board.py
 
+def onEnemyKilled(enemy):
+    if enemy.type != "memoryLeak":
+        return
+    else:
+        count = math.ceil(config.MEMORY_LEAK_SPLIT_COUNT + random.uniform(-config.ML_SPLIT_VARIANCE, config.ML_SPLIT_VARIANCE))
+
+        for _ in range(count):
+            x = enemy.x + random.uniform(-2, 2)
+            y = enemy.y + random.uniform(-2, 2)
+            if not Enemy._walkable(board, x, y):
+                x, y = enemy.x, enemy.y
+            enemies.append(Enemy("bug", x, y))
+
+events.subscribe("enemyKilled", onEnemyKilled)
+
+
 phase = config.PHASE_MENU
 shopPanel = ShopPanel(uiManager)
 startMenu = StartMenu(config.SCREEN_W, config.SCREEN_H)
@@ -105,6 +121,9 @@ def resetGame():
     fields = buildFields(board, pheromones.grid)
     paused = False
     phase = config.PHASE_MENU
+    events.clearAll()
+    events.subscribe("toolDestroyed", onToolDestroyed)
+    events.subscribe("enemyKilled", onEnemyKilled)
 
 
 def tileRect(x, y):
@@ -222,7 +241,7 @@ while running:
             edges = [(x, y) for x in range(board.width) for y in (0, board.height - 1)] + \
                     [(x, y) for y in range(board.height) for x in (0, board.width - 1)]
             x, y = random.choice([t for t in edges if board.isBuildable(*t)])
-            enemies.append(Enemy("bug", x + 0.5, y + 0.5))
+            enemies.append(Enemy("memoryLeak", x + 0.5, y + 0.5))
         ###DEBUG
 
         # F1 cycles the AI overlay: off -> flow arrows -> fear heatmap -> off
