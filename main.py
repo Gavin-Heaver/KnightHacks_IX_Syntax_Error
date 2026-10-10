@@ -153,7 +153,7 @@ while running:
         projectiles = [p for p in projectiles if p.alive]
 
         for e in enemies:
-            e.update(dt, board, dist)
+            e.update(dt, board, dist, enemies)
         enemies = [e for e in enemies if e.alive]
 
         screen.fill(config.COLOR_BG)

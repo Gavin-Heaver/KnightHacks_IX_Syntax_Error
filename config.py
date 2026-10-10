@@ -37,6 +37,8 @@ PHASE_GAME_OVER = "gameOver"
 SCRIPT_TICKS_PER_SECOND = 8      # how often tools run tick()
 AI_TICK_SECONDS = 0.75           # pheromone / crowd update interval
 DEMO_SEED = 1337
+SEPARATION_RADIUS = 1
+SEPARATION_WEIGHT = 2
 
 # ---------------------------------------------------------------- economy (bytes)
 START_BYTES = 150
