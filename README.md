@@ -1,7 +1,8 @@
 # Syntax Error: Code Tower Defense
 
 > **Knight Hacks IX Hackathon Project**  
-> *Developed by Gavin Heaver & Tadhg Hallahan*
+> *Gavin Heaver: Player Systems, UI, In-Game Scripting Sandbox & Economy* <br>
+> *Tadhg Hallahan: Path Finding, Enemy AI, Flow Fields, Pheromones & Wave Generation*
 
 [![Python](https://img.shields.io/badge/Python-3.11%20%7C%203.12-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![pygame-ce](https://img.shields.io/badge/Engine-pygame--ce-informational?logo=pygame)](https://pyga.me/)
@@ -10,17 +11,17 @@
 
 ---
 
-## 💡 Overview
+## Overview
 
-**Syntax Error: Code Tower Defense** is an algorithmic, cyberpunk tower defense game where defense meets computer science. Players protect a central **CPU** on an interactive circuit-board grid from escalating waves of malicious bugs, zero-day exploits, and code injections. 
+**Syntax Error: Code Tower Defense** is an algorithmic, cyber tower defense game where defense meets computer science. Players protect a central CPU on an interactive circuit-board grid from escalating waves of malicious bugs, zero-day exploits, and code injections. 
 
 Unlike traditional tower defense games with static upgrades, **Syntax Error** revolves around two core pillars:
 1. **Live In-Game Python Programming**: Every defense turret runs real, sandboxed Python code that players edit, compile, and debug directly in-game.
-2. **Adaptive Swarm AI & Creative Pathfinding**: Enemies don't follow static paths. Swarms use layered Dijkstra flow fields, enemy-specific cost personalities, dynamic traffic layers, and an ant-colony-inspired pheromone system that remembers where bugs die and actively routes future waves around player kill-zones.
+2. **Creative Pathfinding & Adaptive Swarm AI**: Enemies don't follow static paths. Swarms use layered Dijkstra flow fields, enemy-specific cost personalities, dynamic traffic layers, and an ant-colony-inspired pheromone system that remembers where bugs die and actively routes future waves around player kill-zones.
 
 ---
 
-## 🧠 Advanced Pathfinding & Swarm Intelligence
+## Advanced Pathfinding & Swarm Intelligence
 
 *Built for the creative pathfinding challenge category, the swarm AI uses graph theory and biological swarm learning:*
 
@@ -62,7 +63,7 @@ The wave director evaluates the flow-field cost along all map edges and applies 
 
 ---
 
-## 💻 In-Game Python Programming System
+## In-Game Python Programming System
 
 Players do not just watch towers fire—they program their logic in real Python using the in-game editor:
 
@@ -84,7 +85,7 @@ def tick():
 
 ---
 
-## 🏗️ Software Engineering & Architecture
+## Software Engineering & Architecture
 
 The codebase adheres strictly to clean **Object-Oriented Programming (OOP)** and modular design patterns:
 
@@ -111,7 +112,7 @@ The codebase adheres strictly to clean **Object-Oriented Programming (OOP)** and
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### 1. Clone the Repository
 ```bash
@@ -133,7 +134,7 @@ python main.py
 
 ---
 
-## 🎮 Controls & Shortcuts
+## Key Controls & Shortcuts
 
 | Key / Action | Function |
 |---|---|
@@ -147,8 +148,4 @@ python main.py
 
 ---
 
-## 👥 Authors & Team
-
-Developed with pride at **Knight Hacks IX**:
-* **Gavin Heaver** — *Player Systems, UI, In-Game Scripting Sandbox & Economy*
-* **Tadhg Hallahan** — *Enemy AI, Flow Fields, Pheromones & Wave Generation*
+Developed with pride at **Knight Hacks IX**
