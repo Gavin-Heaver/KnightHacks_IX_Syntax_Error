@@ -24,10 +24,8 @@ from entities.enemy import Enemy
 from ui.debugOverlay import drawFlowArrows
 
 ###DEBUG
-from entities.tools import FakeTool, Turret
+from entities.tools import Turret
 ###DEBUG
-
-from scripting.runner import towerScript
 from ui.menu import StartMenu
 
 #setup
@@ -132,7 +130,6 @@ while running:
                 ty = (event.pos[1] - config.BOARD_Y) // config.TILE
                 if event.button == 1:
                     board.place(Turret(tx, ty), tx, ty)
-                    board.place(FakeTool(), tx, ty)    # left click: place a block
                 elif event.button == 3:
                     board.remove(tx, ty)               # right click: remove it
             ###DEBUG

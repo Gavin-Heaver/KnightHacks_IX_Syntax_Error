@@ -183,7 +183,3 @@ class TowerScript:
         finally:
             sys.settrace(oldTrace)
 
-
-# For backwards compatibility with main.py initial stub import
-def towerScript():
-    pass

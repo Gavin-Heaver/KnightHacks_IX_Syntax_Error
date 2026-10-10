@@ -2,6 +2,10 @@
 import config
 from game import events
 
+from scripting.runner import TowerScript
+from scripting.defaults import DEFAULT_TURRET_SCRIPT
+from entities.projectile import Projectile
+
 
 class DefenseTool:
     kind = "tool"
@@ -38,12 +42,6 @@ class FakeTool(DefenseTool):
         super().__init__("turret", x, y)
         self.programmable = programmable
 
-
-from scripting.runner import TowerScript
-from scripting.defaults import DEFAULT_TURRET_SCRIPT
-from entities.projectile import Projectile
-
-
 class Turret(DefenseTool):
     """
     Programmable defense turret.
@@ -77,7 +75,6 @@ class Turret(DefenseTool):
         self.range = tierData["range"]
         self.fireRate = tierData["fireRate"]
         self.cycleBudget = tierData["cycles"]
-        pass
 
     def upgrade(self):
         """Upgrades the turret to the next tier if available."""
@@ -89,7 +86,6 @@ class Turret(DefenseTool):
             self.applyTierStats()
             return True
         return False
-        pass
 
     def update(self, dt, allEnemies, newProjectilesList, unlockedConcepts=None):
         """
@@ -126,5 +122,3 @@ class Turret(DefenseTool):
                 newProjectilesList.append(bullet)
                 self.fireCooldown = 1.0 / self.fireRate
             self.wantsToFire = False
-        pass
-
