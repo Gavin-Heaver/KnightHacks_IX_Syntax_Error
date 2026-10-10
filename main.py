@@ -28,9 +28,7 @@ from ui.debugOverlay import drawFlowArrows
 from game.gameState import GameState
 from game.waves import WaveSpawner
 
-###DEBUG
 from entities.tools import Turret
-###DEBUG
 from ui.menu import StartMenu
 from ui.hud import HUD
 from ui.editor import CodeEditor
@@ -74,6 +72,37 @@ enemies = []                    # game.enemies: list[Enemy]
 projectiles = []
 selectedTool = None
 waveSpawner = WaveSpawner()
+waveCountdown = None
+bannerFont = pygame.font.SysFont("consolas", 28, bold=True)
+paused = False
+pauseFont = pygame.font.SysFont("consolas", 64, bold=True)
+hintFont = pygame.font.SysFont("consolas", 20)
+
+def beginWave():
+    global phase
+    waveSpawner.start(gameState.wave)
+    phase = config.PHASE_WAVE
+
+def resetGame():
+    global board, gameState, enemies, projectiles, waveSpawner
+    global waveCountdown, dist, selectedTool, paused, phase
+
+    events.clearAll()
+    events.subscribe("toolDestroyed", onToolDestroyed)
+
+    random.seed(config.DEMO_SEED)
+    board = Board()
+    gameState = GameState()
+    enemies = []
+    projectiles = []
+    waveSpawner = WaveSpawner
+    waveCountdown = None
+    selectedTool = None
+    codeEditor.close()
+    dist = buildField(board, board.cpuTiles, bugCost)
+    paused = False
+    phase = config.PHASE_MENU
+
 
 
 def tileRect(x, y):
