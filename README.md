@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/pixil-frame-0-trans.png" alt="Syntax Error Logo" width="260" />
+</p>
+
 # Syntax Error: Code Tower Defense
 
 > **Knight Hacks IX Hackathon Project**  
