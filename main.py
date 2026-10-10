@@ -21,9 +21,10 @@ from game.board import Board
 from game import events
 from ai.flowField import buildField
 from entities.enemy import Enemy
+from ui.debugOverlay import drawFlowArrows
 
 ###DEBUG
-from entities.tools import FakeTool
+from entities.tools import FakeTool, Turret
 ###DEBUG
 
 from scripting.runner import towerScript
@@ -60,7 +61,9 @@ events.subscribe("toolDestroyed", onToolDestroyed)
 
 phase = config.PHASE_MENU
 startMenu = StartMenu(config.SCREEN_W, config.SCREEN_H)
+showOverlay = False
 enemies = []                    # game.enemies: list[Enemy]
+projectiles = []
 
 
 def tileRect(x, y):
@@ -85,6 +88,11 @@ def drawBoard():
         px = config.BOARD_X + e.x * config.TILE
         py = config.BOARD_Y + e.y * config.TILE
         pygame.draw.circle(screen, config.COLOR_ENEMY, (int(px), int(py)), config.TILE // 3)
+
+    for p in projectiles:
+        px = config.BOARD_X + p.x * config.TILE
+        py = config.BOARD_Y + p.y * config.TILE
+        pygame.draw.circle(screen, (100, 220, 255), (int(px), int(py)), 3)
 
 
 #main loop
@@ -115,10 +123,14 @@ while running:
                 enemies.append(Enemy("bug", x + 0.5, y + 0.5))
             ###DEBUG
 
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_F1:
+                showOverlay = not showOverlay
+
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 tx = (event.pos[0] - config.BOARD_X) // config.TILE
                 ty = (event.pos[1] - config.BOARD_Y) // config.TILE
                 if event.button == 1:
+                    board.place(Turret(tx, ty), tx, ty)
                     board.place(FakeTool(), tx, ty)    # left click: place a block
                 elif event.button == 3:
                     board.remove(tx, ty)               # right click: remove it
@@ -133,12 +145,22 @@ while running:
             dist = buildField(board, board.cpuTiles, bugCost)
             board.dirty = False
 
+        for tool in board.allTools():
+            if hasattr(tool, "update"):
+                tool.update(dt, enemies, projectiles)
+
+        for p in projectiles:
+            p.update(dt, enemies, board)
+        projectiles = [p for p in projectiles if p.alive]
+
         for e in enemies:
             e.update(dt, board, dist)
         enemies = [e for e in enemies if e.alive]
 
         screen.fill(config.COLOR_BG)
         drawBoard()
+        if showOverlay:
+            drawFlowArrows(screen, board, dist)
         uiManager.draw_ui(screen)
 
     pygame.display.flip()
