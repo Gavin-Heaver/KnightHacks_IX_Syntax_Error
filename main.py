@@ -62,6 +62,7 @@ startMenu = StartMenu(config.SCREEN_W, config.SCREEN_H)
 showOverlay = False
 enemies = []                    # game.enemies: list[Enemy]
 projectiles = []
+selectedTool = None
 
 
 def tileRect(x, y):
@@ -70,6 +71,24 @@ def tileRect(x, y):
 
 
 def drawBoard():
+    mx, my = pygame.mouse.get_pos()
+    hoverX = (mx - config.BOARD_X) // config.TILE
+    hoverY = (my - config.BOARD_Y) // config.TILE
+    board.inBounds(hoverX, hoverY)
+
+    if board.inBounds(hoverX, hoverY) is True and phase != config.PHASE_MENU:
+        centerPixelX = config.BOARD_X + (hoverX + 0.5) * config.TILE
+        centerPixelY = config.BOARD_Y + (hoverY + 0.5) * config.TILE
+
+        if (board.isBuildable(hoverX, hoverY)):
+            previewColor = (180, 255, 180)
+            pygame.draw.rect(screen, previewColor, tileRect(hoverX, hoverY), width=2)
+            radius = int(5.0 * config.TILE)
+            pygame.draw.circle(screen, previewColor, (int(centerPixelX), int(centerPixelY)), radius, width=1)
+        else: 
+            previewColor = (255, 70, 70)
+            pygame.draw.rect(screen, previewColor, tileRect(hoverX, hoverY), width=2)
+
     # Board outer boundary frame
     boardOutline = pygame.Rect(config.BOARD_X - 1, config.BOARD_Y - 1,
                                config.BOARD_PX_W + 2, config.BOARD_PX_H + 2)
@@ -92,6 +111,15 @@ def drawBoard():
         py = config.BOARD_Y + p.y * config.TILE
         pygame.draw.circle(screen, (100, 220, 255), (int(px), int(py)), 3)
 
+    if selectedTool is not None:
+        selectRect = tileRect(selectedTool.x, selectedTool.y)
+        pygame.draw.rect(screen, (255, 255, 120), selectRect, width=2)
+
+        selCenterX = config.BOARD_X + (selectedTool.x + 0.5) * config.TILE
+        selCenterY = config.BOARD_Y + (selectedTool.y + 0.5) * config.TILE
+        selRadius = int(selectedTool.range * config.TILE)
+
+        pygame.draw.circle(screen, (255, 255, 120), (int(selCenterX), int(selCenterY)), selRadius, width=1)
 
 #main loop
 while running:
@@ -129,9 +157,16 @@ while running:
                 tx = (event.pos[0] - config.BOARD_X) // config.TILE
                 ty = (event.pos[1] - config.BOARD_Y) // config.TILE
                 if event.button == 1:
-                    board.place(Turret(tx, ty), tx, ty)
+                    existing = board.toolAt(tx, ty)
+                    if existing != None:
+                            selectedTool = existing
+                    if existing == None and board.isBuildable(tx,ty):
+                        board.place(Turret(tx, ty), tx, ty)
+                        selectedTool = None
+
                 elif event.button == 3:
-                    board.remove(tx, ty)               # right click: remove it
+                    selectedTool = None
+                    board.remove(tx, ty)     
             ###DEBUG
 
     if phase == config.PHASE_MENU:
