@@ -21,6 +21,7 @@ from game.board import Board
 from game import events
 from ai.flowField import buildField
 from entities.enemy import Enemy
+from ui.debugOverlay import drawFlowArrows
 
 ###DEBUG
 from entities.tools import FakeTool
@@ -61,6 +62,7 @@ events.subscribe("toolDestroyed", onToolDestroyed)
 phase = config.PHASE_MENU
 startMenu = StartMenu(config.SCREEN_W, config.SCREEN_H)
 enemies = []                    # game.enemies: list[Enemy]
+showOverlay = False
 
 
 def tileRect(x, y):
@@ -115,6 +117,10 @@ while running:
                 enemies.append(Enemy("bug", x + 0.5, y + 0.5))
             ###DEBUG
 
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_F1:
+                showOverlay = not showOverlay
+
+            ###DEBUG
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 tx = (event.pos[0] - config.BOARD_X) // config.TILE
                 ty = (event.pos[1] - config.BOARD_Y) // config.TILE
@@ -122,6 +128,7 @@ while running:
                     board.place(FakeTool(), tx, ty)    # left click: place a block
                 elif event.button == 3:
                     board.remove(tx, ty)               # right click: remove it
+            ###DEBUG
 
     if phase == config.PHASE_MENU:
         startMenu.draw(screen)
@@ -139,6 +146,8 @@ while running:
 
         screen.fill(config.COLOR_BG)
         drawBoard()
+        if showOverlay:
+            drawFlowArrows(screen, board, dist)
         uiManager.draw_ui(screen)
 
     pygame.display.flip()
