@@ -13,7 +13,7 @@ class CodeEditor:
 
     def buildUI(self):
         self.panel = UIPanel (
-            relative_rect=pygame.Rect((980, 16), (281, 688)), manager=self.uiManager
+            relative_rect=pygame.Rect((980, 56), (284, 648)), manager=self.uiManager
         )
 
         self.titleLabel = UILabel(
@@ -33,7 +33,7 @@ class CodeEditor:
         )
 
         self.consoleBox = UITextBox(
-            html_text="Console ready...", relative_rect=pygame.Rect((10, 450), (264, 220)), manager=self.uiManager, container=self.panel
+            html_text="Console ready...", relative_rect=pygame.Rect((10, 450), (264, 180)), manager=self.uiManager, container=self.panel
         )
 
     def open(self, tool):
@@ -42,7 +42,7 @@ class CodeEditor:
 
         self.codeBox.set_text(tool.script.sourceCode)
 
-        self.titleLabel.set_text(f"TOWER COMPILER ({tool.tier})")
+        self.titleLabel.set_text(f"{tool.kind.upper()} COMPILER (Tier: {tool.tier})")
 
         self.panel.show()
         
