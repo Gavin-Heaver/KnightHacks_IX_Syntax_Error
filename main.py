@@ -33,9 +33,10 @@ from ai.pheromone import PheromoneMap
 from entities.tools import Turret, Firewall, Debugger
 ###DEBUG
 from ui.shop import ShopPanel
-from ui.menu import StartMenu
+from ui.menu import StartMenu, recordNewScore
 from ui.hud import HUD
 from ui.editor import CodeEditor
+from ui.gameOver import GameOverTerminal
 
 #setup
 random.seed(config.DEMO_SEED)   # deterministic demo (use only `random` for randomness)
@@ -77,6 +78,7 @@ startMenu = StartMenu(config.SCREEN_W, config.SCREEN_H)
 gameState = GameState()
 codeEditor = CodeEditor(uiManager)
 hud = HUD()
+gameOverTerminal = GameOverTerminal(config.SCREEN_W, config.SCREEN_H)
 overlayMode = 0                 # F1 cycles: 0 = off, 1 = flow arrows, 2 = fear heatmap
 enemies = []                    # game.enemies: list[Enemy]
 projectiles = []
@@ -84,6 +86,7 @@ selectedTool = None
 waveSpawner = WaveSpawner()
 waveCountdown = None            # seconds until the next wave auto-starts; None = waiting for Enter
 paused = False
+scoreRecorded = False
 bannerFont = pygame.font.SysFont("consolas", 28, bold=True)
 pauseFont = pygame.font.SysFont("consolas", 64, bold=True)
 hintFont = pygame.font.SysFont("consolas", 20)
@@ -101,7 +104,9 @@ def beginWave():
 
 def resetGame():
     global board, gameState, enemies, projectiles, waveSpawner
-    global waveCountdown, selectedTool, paused, phase, fields, pheromones, aiTimer
+    global waveCountdown, selectedTool, paused, phase, fields, pheromones, aiTimer, scoreRecorded
+
+    scoreRecorded = False
 
     # the old GameState / PheromoneMap are still subscribed to events -- clear them first
     events.clearAll()
@@ -205,6 +210,18 @@ while running:
                 running = False
             continue
 
+        if phase == config.PHASE_GAME_OVER:
+            action = gameOverTerminal.handleEvent(event)
+            if action == "submitted":
+                recordNewScore(gameOverTerminal.playerName, gameState.wave, gameState.totalBytesEarned, gameState.bugsKilled)
+                resetGame()
+                startMenu.state = "scoreboard"   # Takes player directly to the scoreboard to see their rank!
+                phase = config.PHASE_MENU
+            elif action == "quit":
+                resetGame()
+                phase = config.PHASE_MENU
+            continue
+
         # ---- paused: only ENTER (resume) and ESC (quit to menu) do anything
         if paused:
             if event.type == pygame.KEYDOWN:
@@ -288,7 +305,13 @@ while running:
 
     else:
         # ---- update (skipped entirely while paused, so everything freezes)
-        if not paused:
+        if not paused and phase != config.PHASE_GAME_OVER:
+            # Check for Game Over when CPU HP hits 0
+            if gameState.cpuHp <= 0:
+                phase = config.PHASE_GAME_OVER
+                gameState.phase = config.PHASE_GAME_OVER
+                gameOverTerminal.open(gameState.wave, gameState.totalBytesEarned, gameState.bugsKilled)
+
             shopPanel.update(gameState, selectedTool)
             uiManager.update(dt)
 
@@ -369,6 +392,10 @@ while running:
             hint = hintFont.render("ENTER  resume     ESC  quit to menu", True, (150, 170, 190))
             screen.blit(title, title.get_rect(center=(cx, cy - 20)))
             screen.blit(hint, hint.get_rect(center=(cx, cy + 35)))
+
+        # Game Over overlay
+        if phase == config.PHASE_GAME_OVER:
+            gameOverTerminal.draw(screen, dt)
 
     pygame.display.flip()
 

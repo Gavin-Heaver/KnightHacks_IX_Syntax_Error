@@ -28,5 +28,17 @@
     "wave": 2,
     "bytes": 180,
     "kills": 12
+  },
+  {
+    "name": "Gavin",
+    "wave": 1,
+    "bytes": 175,
+    "kills": 5
+  },
+  {
+    "name": "tadhg",
+    "wave": 1,
+    "bytes": 150,
+    "kills": 0
   }
 ]
