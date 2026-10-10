@@ -63,7 +63,7 @@ phase = config.PHASE_MENU
 startMenu = StartMenu(config.SCREEN_W, config.SCREEN_H)
 showOverlay = False
 enemies = []                    # game.enemies: list[Enemy]
-showOverlay = False
+projectiles = []
 
 
 def tileRect(x, y):
