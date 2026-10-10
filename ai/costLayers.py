@@ -2,12 +2,12 @@ import config
 from ai.flowField import buildField
 
 def buildFireLayer(board):
-    fire = [[0,0] * board.width for _ in range(board.height)]
+    fire = [[0.0] * board.width for _ in range(board.height)]
 
     for tool in board.allTools():
         dps = getattr(tool, "damage", 0) * getattr(tool, "fireRate", 0)
         if dps <= 0:
-            return
+            continue
 
         r = tool.range
         reach = int(r) + 1
