@@ -185,46 +185,56 @@ class StartMenu:
         screen.blit(tip, tip.get_rect(center=(self.screenW // 2, self.screenH - 30)))
 
     def _drawScoreboardView(self, screen):
-        # Panel container
-        panelW, panelH = 760, 520
+        # Panel container (expanded to 880 px for clean column spacing)
+        panelW, panelH = 880, 520
         px = (self.screenW - panelW) // 2
-        py = 70
+        py = 55
         pygame.draw.rect(screen, (18, 25, 35), (px, py, panelW, panelH), border_radius=8)
         pygame.draw.rect(screen, (70, 200, 120), (px, py, panelW, panelH), 2, border_radius=8)
-
         # Header
         title = self.titleFont.render("LOCAL SCOREBOARD", True, config.COLOR_CPU)
-        screen.blit(title, title.get_rect(center=(self.screenW // 2, py + 45)))
-
+        screen.blit(title, title.get_rect(center=(self.screenW // 2, py + 40)))
         sub = self.subFont.render("Persisted on-device: top hacking simulations survived", True, (140, 170, 200))
-        screen.blit(sub, sub.get_rect(center=(self.screenW // 2, py + 85)))
-
-        # Table Headers
-        colY = py + 125
-        headers = [("RANK", px + 40), ("HANDLE", px + 150), ("WAVE REACHED", px + 360), ("BYTES", px + 530), ("BUGS KILLED", px + 640)]
-        for h, hx in headers:
-            txt = self.headerFont.render(h, True, (100, 180, 255))
-            screen.blit(txt, (hx, colY))
-        pygame.draw.line(screen, (40, 70, 100), (px + 30, colY + 30), (px + panelW - 30, colY + 30), 2)
-
+        screen.blit(sub, sub.get_rect(center=(self.screenW // 2, py + 75)))
+        # Table Column Definitions: (label, xOffset, alignment)
+        colY = py + 115
+        headers = [
+            ("RANK", px + 65, "center"),
+            ("HANDLE", px + 150, "left"),
+            ("WAVE REACHED", px + 440, "center"),
+            ("BYTES", px + 620, "center"),
+            ("BUGS KILLED", px + 760, "center"),
+        ]
+        for text, hx, align in headers:
+            txt = self.headerFont.render(text, True, (100, 180, 255))
+            if align == "center":
+                rect = txt.get_rect(center=(hx, colY))
+            else:
+                rect = txt.get_rect(midleft=(hx, colY))
+            screen.blit(txt, rect)
+        # Divider line under column headers
+        pygame.draw.line(screen, (40, 70, 100), (px + 30, colY + 20), (px + panelW - 30, colY + 20), 2)
         # Records
         scores = getScoreboard()
-        rowY = colY + 45
-        for i, s in enumerate(scores[:7]):
+        rowY = colY + 36
+        for i, s in enumerate(scores[:10]):
+            # Subtle alternating row background for clean arcade leaderboard styling
+            if i % 2 == 0:
+                stripeRect = pygame.Rect(px + 30, rowY - 4, panelW - 60, 28)
+                pygame.draw.rect(screen, (24, 34, 46), stripeRect, border_radius=4)
             rankCol = (255, 215, 0) if i == 0 else ((200, 220, 240) if i < 3 else (140, 160, 180))
             rTxt = self.bodyFont.render(f"#{i+1}", True, rankCol)
             nTxt = self.bodyFont.render(str(s.get("name", "Unknown")), True, (220, 235, 250))
             wTxt = self.bodyFont.render(f"Wave {s.get('wave', 0)}", True, (70, 200, 120))
             bTxt = self.bodyFont.render(f"{s.get('bytes', 0)} B", True, (255, 180, 80))
             kTxt = self.bodyFont.render(str(s.get("kills", 0)), True, (255, 100, 100))
-
-            screen.blit(rTxt, (px + 40, rowY))
-            screen.blit(nTxt, (px + 150, rowY))
-            screen.blit(wTxt, (px + 360, rowY))
-            screen.blit(bTxt, (px + 530, rowY))
-            screen.blit(kTxt, (px + 650, rowY))
-            rowY += 34
-
+            # Draw precisely aligned to each column
+            screen.blit(rTxt, rTxt.get_rect(center=(px + 65, rowY + 10)))
+            screen.blit(nTxt, nTxt.get_rect(midleft=(px + 150, rowY + 10)))
+            screen.blit(wTxt, wTxt.get_rect(center=(px + 440, rowY + 10)))
+            screen.blit(bTxt, bTxt.get_rect(center=(px + 620, rowY + 10)))
+            screen.blit(kTxt, kTxt.get_rect(center=(px + 760, rowY + 10)))
+            rowY += 32
         self.backBtn.draw(screen, self.btnFont)
 
     def _drawGuideView(self, screen):
