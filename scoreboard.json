@@ -1,0 +1,32 @@
+[
+  {
+    "name": "RootAdmin",
+    "wave": 10,
+    "bytes": 1420,
+    "kills": 95
+  },
+  {
+    "name": "KernelHacker",
+    "wave": 7,
+    "bytes": 850,
+    "kills": 54
+  },
+  {
+    "name": "TestUser",
+    "wave": 5,
+    "bytes": 500,
+    "kills": 30
+  },
+  {
+    "name": "ScriptKiddie",
+    "wave": 4,
+    "bytes": 410,
+    "kills": 28
+  },
+  {
+    "name": "NullPointer",
+    "wave": 2,
+    "bytes": 180,
+    "kills": 12
+  }
+]

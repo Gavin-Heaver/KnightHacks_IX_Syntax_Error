@@ -27,6 +27,7 @@ from entities.tools import FakeTool
 ###DEBUG
 
 from scripting.runner import towerScript
+from ui.menu import StartMenu
 
 #setup
 random.seed(config.DEMO_SEED)   # deterministic demo (use only `random` for randomness)
@@ -57,7 +58,8 @@ def onToolDestroyed(tool):
 events.subscribe("toolDestroyed", onToolDestroyed)
 ### Move to game/board.py
 
-phase = config.PHASE_BUILD
+phase = config.PHASE_MENU
+startMenu = StartMenu(config.SCREEN_W, config.SCREEN_H)
 enemies = []                    # game.enemies: list[Enemy]
 
 
@@ -93,43 +95,52 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-        ###DEBUG    
-        elif event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-            running = False
-        ###DEBUG
-        
-        uiManager.process_events(event)
+        if phase == config.PHASE_MENU:
+            action = startMenu.handleEvent(event)
+            if action == "play":
+                phase = config.PHASE_BUILD
+            elif action == "quit":
+                running = False
+        else:
+            uiManager.process_events(event)
 
-        ###DEBUG
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_b:
-            edges = [(x, y) for x in range(board.width) for y in (0, board.height - 1)] + \
-                [(x, y) for y in range(board.height) for x in (0, board.width - 1)]
-            x, y = random.choice([t for t in edges if board.isBuildable(*t)])
-            enemies.append(Enemy("bug", x + 0.5, y + 0.5))
-        ###DEBUG
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                phase = config.PHASE_MENU   # ESC returns to main menu
 
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            tx = (event.pos[0] - config.BOARD_X) // config.TILE
-            ty = (event.pos[1] - config.BOARD_Y) // config.TILE
-            if event.button == 1:
-                board.place(FakeTool(), tx, ty)    # left click: place a block
-            elif event.button == 3:
-                board.remove(tx, ty)               # right click: remove it
+            ###DEBUG
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_b:
+                edges = [(x, y) for x in range(board.width) for y in (0, board.height - 1)] + \
+                    [(x, y) for y in range(board.height) for x in (0, board.width - 1)]
+                x, y = random.choice([t for t in edges if board.isBuildable(*t)])
+                enemies.append(Enemy("bug", x + 0.5, y + 0.5))
+            ###DEBUG
 
-    uiManager.update(dt)
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                tx = (event.pos[0] - config.BOARD_X) // config.TILE
+                ty = (event.pos[1] - config.BOARD_Y) // config.TILE
+                if event.button == 1:
+                    board.place(FakeTool(), tx, ty)    # left click: place a block
+                elif event.button == 3:
+                    board.remove(tx, ty)               # right click: remove it
 
-    # flow fields are rebuilt only when the board changes (see board.dirty)
-    if board.dirty:
-        dist = buildField(board, board.cpuTiles, bugCost)
-        board.dirty = False
+    if phase == config.PHASE_MENU:
+        startMenu.draw(screen)
+    else:
+        uiManager.update(dt)
 
-    for e in enemies:
-        e.update(dt, board, dist)
-    enemies = [e for e in enemies if e.alive]
+        # flow fields are rebuilt only when the board changes (see board.dirty)
+        if board.dirty:
+            dist = buildField(board, board.cpuTiles, bugCost)
+            board.dirty = False
 
-    screen.fill(config.COLOR_BG)
-    drawBoard()
-    uiManager.draw_ui(screen)
+        for e in enemies:
+            e.update(dt, board, dist)
+        enemies = [e for e in enemies if e.alive]
+
+        screen.fill(config.COLOR_BG)
+        drawBoard()
+        uiManager.draw_ui(screen)
+
     pygame.display.flip()
 
 pygame.quit()

@@ -28,6 +28,7 @@ CPU_MAX_HP = 100
 SPAWN_EDGE = "all"
 
 # ---------------------------------------------------------------- phases / timing
+PHASE_MENU = "menu"
 PHASE_BUILD = "build"
 PHASE_WAVE = "wave"
 PHASE_LAB = "lab"
