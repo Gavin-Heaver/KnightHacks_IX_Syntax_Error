@@ -7,9 +7,9 @@ SCREEN_H = 720
 FPS = 60
 
 # ---------------------------------------------------------------- grid
-TILE = 32                 # pixels per tile
-GRID_W = 26               # tiles
-GRID_H = 16
+TILE = 16            # pixels per tile
+GRID_W = 60          # tiles
+GRID_H = 40
 BOARD_X = 16              # board's top-left pixel offset on screen
 BOARD_Y = 16
 BOARD_PX_W = GRID_W * TILE   # 832 px
@@ -18,14 +18,14 @@ BOARD_PX_H = GRID_H * TILE   # 512 px
 # Bottom strip (console / HUD / graphs) starts at y = BOARD_Y + BOARD_PX_H + 16
 
 # CPU occupies a small block on the right-middle of the board (top-left tile + size).
-CPU_X = GRID_W - 3
-CPU_Y = GRID_H // 2 - 1
 CPU_W = 2
 CPU_H = 2
+CPU_X = GRID_W // 2 - CPU_W // 2   # 32//2 - 1 = 15
+CPU_Y = GRID_H // 2 - CPU_H // 2   # 18//2 - 1 = 8
 CPU_MAX_HP = 100
 
 # Bugs spawn on the left edge by default (director may use other edges).
-SPAWN_EDGE = "left"
+SPAWN_EDGE = "all"
 
 # ---------------------------------------------------------------- phases / timing
 PHASE_BUILD = "build"
