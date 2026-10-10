@@ -26,6 +26,7 @@ from ai.flowField import buildField
 from entities.enemy import Enemy
 from ui.debugOverlay import drawFlowArrows
 from game.gameState import GameState
+from game.waves import WaveSpawner
 
 ###DEBUG
 from entities.tools import Turret
@@ -72,6 +73,7 @@ showOverlay = False
 enemies = []                    # game.enemies: list[Enemy]
 projectiles = []
 selectedTool = None
+waveSpawner = WaveSpawner()
 
 
 def tileRect(x, y):
@@ -187,6 +189,12 @@ while running:
                     codeEditor.close() 
             ###DEBUG
 
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_n and not waveSpawner.active:
+                waveSpawner.start(gameState.wave)
+                phase = config.PHASE_WAVE
+                print(f"Wave {gameState.wave}: {waveSpawner.modifier} from {waveSpawner.edges}")   # until there's a HUD
+
+
     if phase == config.PHASE_MENU:
         startMenu.draw(screen)
     else:
@@ -205,9 +213,17 @@ while running:
             p.update(dt, enemies, board)
         projectiles = [p for p in projectiles if p.alive]
 
+        waveSpawner.update(dt, board, enemies)
+
         for e in enemies:
             e.update(dt, board, dist, enemies)
         enemies = [e for e in enemies if e.alive]
+
+        if waveSpawner.active and waveSpawner.isDone(enemies):
+            waveSpawner.active = False
+            gameState.addBytes(config.WAVE_CLEAR_BONUS)
+            gameState.wave += 1
+            phase = config.PHASE_BUILD
 
         screen.fill(config.COLOR_BG)
         drawBoard()
