@@ -2,20 +2,20 @@
 # Shared file: add freely, but don't rename existing entries without telling the team.
 
 # ---------------------------------------------------------------- display
-SCREEN_W = 1920
-SCREEN_H = 1080
+SCREEN_W = 1280
+SCREEN_H = 720
 FPS = 60
 
 # ---------------------------------------------------------------- grid
-TILE = 48                 # pixels per tile
-GRID_W = 32               # tiles
-GRID_H = 18
-BOARD_X = 0               # board's top-left pixel offset on screen
-BOARD_Y = 0
-BOARD_PX_W = GRID_W * TILE   # 1536
-BOARD_PX_H = GRID_H * TILE   # 864
-# Right-hand side panel (shop / editor) starts at x = BOARD_PX_W.
-# Bottom strip (console / HUD / graphs) starts at y = BOARD_PX_H.
+TILE = 32                 # pixels per tile
+GRID_W = 26               # tiles
+GRID_H = 16
+BOARD_X = 16              # board's top-left pixel offset on screen
+BOARD_Y = 16
+BOARD_PX_W = GRID_W * TILE   # 832 px
+BOARD_PX_H = GRID_H * TILE   # 512 px
+# Right-hand side panel (shop / editor) starts at x = BOARD_X + BOARD_PX_W + 16
+# Bottom strip (console / HUD / graphs) starts at y = BOARD_Y + BOARD_PX_H + 16
 
 # CPU occupies a small block on the right-middle of the board (top-left tile + size).
 CPU_X = GRID_W - 3
