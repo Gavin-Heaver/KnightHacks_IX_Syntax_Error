@@ -85,20 +85,9 @@ class GameOverTerminal:
         px, py = self.panelX, self.panelY
         pw, ph = self.panelW, self.panelH
 
-        # Terminal outer window with cyber glass & corner accents
+        # Terminal outer window with cyber glass
         pygame.draw.rect(screen, (10, 16, 24), (px, py, pw, ph), border_radius=8)
         pygame.draw.rect(screen, (220, 60, 70), (px, py, pw, ph), 2, border_radius=8)
-
-        cLen = 16
-        accCol = (255, 95, 105)
-        pygame.draw.line(screen, accCol, (px, py), (px + cLen, py), 3)
-        pygame.draw.line(screen, accCol, (px, py), (px, py + cLen), 3)
-        pygame.draw.line(screen, accCol, (px + pw, py), (px + pw - cLen, py), 3)
-        pygame.draw.line(screen, accCol, (px + pw, py), (px + pw, py + cLen), 3)
-        pygame.draw.line(screen, accCol, (px, py + ph), (px + cLen, py + ph), 3)
-        pygame.draw.line(screen, accCol, (px, py + ph), (px, py + ph - cLen), 3)
-        pygame.draw.line(screen, accCol, (px + pw, py + ph), (px + pw - cLen, py + ph), 3)
-        pygame.draw.line(screen, accCol, (px + pw, py + ph), (px + pw, py + ph - cLen), 3)
 
         # Title bar
         titleH = 32

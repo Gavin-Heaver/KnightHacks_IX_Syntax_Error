@@ -18,7 +18,7 @@ class CodeEditor:
         )
 
         self.titleLabel = UILabel(
-            relative_rect=pygame.Rect((10, 10), (264, 30)), text="// TOWER COMPILER", manager=self.uiManager, container=self.panel
+            relative_rect=pygame.Rect((10, 10), (264, 30)), text="// TOWER COMPILER", manager=self.uiManager, container=self.panel, object_id="#shop_header"
         )
 
         self.codeBox = UITextEntryBox(

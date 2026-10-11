@@ -73,7 +73,7 @@ class HUD:
         pygame.draw.rect(screen, (14, 24, 34), bytePill, border_radius=5)
         pygame.draw.rect(screen, (45, 120, 85), bytePill, width=1, border_radius=5)
 
-        bytesText = f"BYTES: {gameState.bytes} B"
+        bytesText = f"BYTES (B): {gameState.bytes}"
         bytesSurf = self.badgeFont.render(bytesText, True, (255, 205, 75))
         screen.blit(bytesSurf, bytesSurf.get_rect(center=bytePill.center))
 
@@ -90,31 +90,23 @@ class HUD:
         hpPct = max(0.0, gameState.cpuHp / gameState.cpuMaxHp)
         if hpPct > 0.5:
             hpColor = (65, 225, 125)    # Matrix green
-            coreColor = (160, 255, 195)
         elif hpPct > 0.25:
             hpColor = (245, 190, 50)   # Caution gold
-            coreColor = (255, 235, 140)
         else:
             hpColor = (255, 65, 75)    # Alert crimson
-            coreColor = (255, 160, 170)
 
         fillW = int(barW * hpPct)
         if fillW > 0:
             pygame.draw.rect(screen, hpColor, (barX, barY, fillW, barH), border_radius=4)
-            # Glowing high-energy core line inside the health bar
-            if fillW > 8:
-                midY = barY + barH // 2
-                pygame.draw.line(screen, coreColor, (barX + 3, midY), (barX + fillW - 3, midY), 2)
 
-        # Health Bar Centered Label with Soft Contrast Backing Pill
+        # Health Bar Centered Label (Clean text directly over bar without gray background)
         hpStr = f"CPU CORE: {int(gameState.cpuHp)}/{int(gameState.cpuMaxHp)}"
+        hpShadow = self.smallFont.render(hpStr, True, (0, 0, 0))
         hpLabel = self.smallFont.render(hpStr, True, (240, 250, 255))
         labelCenter = (barX + barW // 2, barY + barH // 2)
         lRect = hpLabel.get_rect(center=labelCenter)
 
-        labelBacking = pygame.Surface((lRect.width + 14, lRect.height + 4), pygame.SRCALPHA)
-        labelBacking.fill((8, 14, 20, 190))
-        screen.blit(labelBacking, labelBacking.get_rect(center=labelCenter))
+        screen.blit(hpShadow, lRect.move(1, 1))
         screen.blit(hpLabel, lRect)
 
         # 4. Wave Counter (Cyber Cyan Badge at top right)
@@ -123,7 +115,7 @@ class HUD:
         pygame.draw.rect(screen, (14, 24, 34), wavePill, border_radius=5)
         pygame.draw.rect(screen, (40, 130, 165), wavePill, width=1, border_radius=5)
 
-        waveText = f"// WAVE {gameState.wave}"
+        waveText = f"WAVE {gameState.wave}"
         waveSurf = self.badgeFont.render(waveText, True, (115, 225, 255))
         screen.blit(waveSurf, waveSurf.get_rect(center=wavePill.center))
 

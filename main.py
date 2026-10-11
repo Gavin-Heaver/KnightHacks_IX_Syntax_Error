@@ -89,6 +89,23 @@ def toggleFullscreen():
 clock = pygame.time.Clock()
 audioManager.startMusic()       # background soundtrack loops for the whole session
 uiManager = pygame_gui.UIManager((config.SCREEN_W, config.SCREEN_H))
+consolasPath = pygame.font.match_font("consolas")
+if consolasPath:
+    try:
+        uiManager.add_font_paths("consolas", consolasPath)
+        uiManager.preload_fonts([
+            {"name": "consolas", "point_size": 14, "style": "bold"},
+            {"name": "consolas", "point_size": 14, "style": "regular"},
+            {"name": "consolas", "point_size": 14, "style": "italic"},
+            {"name": "consolas", "point_size": 13, "style": "bold"},
+            {"name": "consolas", "point_size": 13, "style": "regular"},
+            {"name": "consolas", "point_size": 12, "style": "regular"},
+        ])
+    except Exception:
+        pass
+themePath = os.path.join(projectDir, "theme.json")
+if os.path.exists(themePath):
+    uiManager.get_theme().load_theme(themePath)
 running = True
 
 board = Board()
