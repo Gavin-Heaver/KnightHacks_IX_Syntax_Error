@@ -23,7 +23,7 @@ class ShopPanel:
         # ----------------------------------------------------------------
         self.paletteLabel = UILabel(
             relative_rect=pygame.Rect((10, 12), (264, 22)),
-            text="DEFENSIVE ARSENAL",
+            text="// DEFENSIVE ARSENAL",
             manager=self.uiManager,
             container=self.panel
         )
@@ -55,7 +55,7 @@ class ShopPanel:
         # ----------------------------------------------------------------
         self.inspectorLabel = UILabel(
             relative_rect=pygame.Rect((10, 162), (264, 22)),
-            text="TOWER INSPECTOR",
+            text="// TOWER INSPECTOR",
             manager=self.uiManager,
             container=self.panel
         )
@@ -108,7 +108,7 @@ class ShopPanel:
         # ----------------------------------------------------------------
         self.sysLabel = UILabel(
             relative_rect=pygame.Rect((10, 520), (264, 22)),
-            text="SYSTEM CORE (CPU)",
+            text="// SYSTEM CORE (CPU)",
             manager=self.uiManager,
             container=self.panel
         )

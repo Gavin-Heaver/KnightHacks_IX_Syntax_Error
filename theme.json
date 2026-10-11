@@ -1,0 +1,70 @@
+{
+  "panel": {
+    "colours": {
+      "dark_bg": "#0a121a",
+      "normal_border": "#2d8758"
+    },
+    "misc": {
+      "border_width": "2",
+      "shadow_width": "0",
+      "shape": "rounded_rectangle",
+      "shape_corner_radius": "6"
+    }
+  },
+  "button": {
+    "colours": {
+      "normal_bg": "#0e1a24",
+      "hovered_bg": "#1a3e30",
+      "active_bg": "#22553d",
+      "disabled_bg": "#10161c",
+      "normal_text": "#c3f8dc",
+      "hovered_text": "#ffffff",
+      "active_text": "#ffffff",
+      "disabled_text": "#4a6054",
+      "normal_border": "#2d8758",
+      "hovered_border": "#55fa91",
+      "active_border": "#69ffa0",
+      "disabled_border": "#1e3629"
+    },
+    "misc": {
+      "border_width": "2",
+      "shadow_width": "0",
+      "shape": "rounded_rectangle",
+      "shape_corner_radius": "5"
+    }
+  },
+  "label": {
+    "colours": {
+      "normal_text": "#8ce1f5"
+    }
+  },
+  "text_box": {
+    "colours": {
+      "dark_bg": "#080e14",
+      "normal_border": "#286f4b",
+      "normal_text": "#dcf0f8"
+    },
+    "misc": {
+      "border_width": "1",
+      "shadow_width": "0",
+      "shape": "rounded_rectangle",
+      "shape_corner_radius": "4"
+    }
+  },
+  "text_entry_box": {
+    "colours": {
+      "dark_bg": "#080e14",
+      "normal_border": "#286f4b",
+      "normal_text": "#69ffa0",
+      "text_cursor": "#55fa91",
+      "selected_bg": "#1a3e30"
+    },
+    "misc": {
+      "border_width": "1",
+      "shadow_width": "0",
+      "shape": "rounded_rectangle",
+      "shape_corner_radius": "4"
+    }
+  }
+}
+

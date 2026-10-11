@@ -24,6 +24,12 @@
     "kills": 30
   },
   {
+    "name": "Enough Said",
+    "wave": 4,
+    "bytes": 595,
+    "kills": 34
+  },
+  {
     "name": "ScriptKiddie",
     "wave": 4,
     "bytes": 410,
@@ -34,6 +40,12 @@
     "wave": 2,
     "bytes": 180,
     "kills": 12
+  },
+  {
+    "name": "Tester",
+    "wave": 1,
+    "bytes": 190,
+    "kills": 4
   },
   {
     "name": "Gavin",
