@@ -23,7 +23,7 @@ import config
 from game.board import Board
 from game import events
 from entities.enemy import Enemy
-from ui.debugOverlay import drawFlowArrows, drawHeatmap
+from ui.debugOverlay import DebugOverlay
 from game.gameState import GameState
 from game.waves import WaveSpawner
 from ai.costLayers import buildFields
@@ -79,7 +79,7 @@ gameState = GameState()
 codeEditor = CodeEditor(uiManager)
 hud = HUD()
 gameOverTerminal = GameOverTerminal(config.SCREEN_W, config.SCREEN_H)
-overlayMode = 0                 # F1 cycles: 0 = off, 1 = flow arrows, 2 = fear heatmap
+debugOverlay = DebugOverlay()
 enemies = []                    # game.enemies: list[Enemy]
 projectiles = []
 selectedTool = None
@@ -340,7 +340,9 @@ while running:
                     x, y = random.choice(valid)
                     enemies.append(Enemy("zeroDay", x + 0.5, y + 0.5))
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_F1:
-                overlayMode = (overlayMode + 1) % 3
+                debugOverlay.cycleMode()
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_F2:
+                debugOverlay.cycleView()
 
         ###DEBUG
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -436,10 +438,7 @@ while running:
         screen.fill(config.COLOR_BG)
         drawBoard()
 
-        if overlayMode == 1:
-            drawFlowArrows(screen, board, fields["cpu"]["bug"])
-        elif overlayMode == 2:
-            drawHeatmap(screen, pheromones.grid)
+        debugOverlay.draw(screen, board, fields, pheromones.grid)
 
         hud.draw(screen, gameState)
 

@@ -63,10 +63,18 @@ def toolTargetTiles(board):
 
 def buildFields(board, fear):
     fire = buildFireLayer(board)
-    towerGoals = toolTargetTiles(board) or board.cpuTiles
+    towerGoals = toolTargetTiles(board)
     fields = {"cpu": {}, "tower": {}}
     for enemyType in config.AI_WEIGHTS:
-        fields["cpu"][enemyType] = buildField(board, board.cpuTiles, makeCost(board, enemyType, fire, fear))
+        fields["cpu"][enemyType] = buildField(board, board.cpuTiles, fieldCost(board, "cpu", enemyType, fire, fear))
         if config.TOWER_TARGET_CHANCE.get(enemyType, 0) > 0:
-            fields["tower"][enemyType] = buildField(board, towerGoals, makeCost(board, enemyType, fire, fear, fireWeight = 0.0))
+            goals = towerGoals
+            if not goals and enemyType != "injection":
+                goals = board.cpuTiles
+            fields["tower"][enemyType] = buildField(board, goals, fieldCost(board, "tower", enemyType, fire, fear))
     return fields
+
+
+def fieldCost(board, target, enemyType, fire, fear):
+    fireWeight = 0.0 if target == "tower" else None
+    return makeCost(board, enemyType, fire, fear, fireWeight)
