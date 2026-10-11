@@ -26,7 +26,8 @@ class ShopPanel:
             relative_rect=pygame.Rect((10, 12), (264, 22)),
             text="// DEFENSIVE ARSENAL",
             manager=self.uiManager,
-            container=self.panel
+            container=self.panel,
+            object_id="#shop_header"
         )
 
         self.btnDebugger = UIButton(
@@ -58,14 +59,16 @@ class ShopPanel:
             relative_rect=pygame.Rect((10, 162), (264, 22)),
             text="// TOWER INSPECTOR",
             manager=self.uiManager,
-            container=self.panel
+            container=self.panel,
+            object_id="#shop_header"
         )
 
         self.infoLabel = UILabel(
             relative_rect=pygame.Rect((10, 188), (264, 22)),
-            text="No Tower Selected",
+            text="// NO TOWER SELECTED",
             manager=self.uiManager,
-            container=self.panel
+            container=self.panel,
+            object_id="#shop_info"
         )
 
         # Action Buttons (Row 1: Upgrade & Sell)
@@ -111,14 +114,16 @@ class ShopPanel:
             relative_rect=pygame.Rect((10, 520), (264, 22)),
             text="// SYSTEM CORE (CPU)",
             manager=self.uiManager,
-            container=self.panel
+            container=self.panel,
+            object_id="#shop_header"
         )
 
         self.cpuStatusLabel = UILabel(
             relative_rect=pygame.Rect((10, 546), (264, 22)),
             text="CPU: 100/100 HP",
             manager=self.uiManager,
-            container=self.panel
+            container=self.panel,
+            object_id="#shop_info"
         )
 
         self.btnExpandCPU = UIButton(
@@ -266,7 +271,7 @@ class ShopPanel:
         if selectedTool is not None:
             corruptStr = " [INFECTED!]" if getattr(selectedTool, "corrupted", False) else ""
             tierStr = f" (T{selectedTool.tier + 1})" if hasattr(selectedTool, "tier") else ""
-            self.infoLabel.set_text(f"{selectedTool.kind.upper()}{tierStr}{corruptStr}")
+            self.infoLabel.set_text(f"► {selectedTool.kind.upper()}{tierStr}{corruptStr}")
 
             # Upgrade button
             tiers = config.TOOL_TIERS.get(selectedTool.kind)
@@ -311,7 +316,7 @@ class ShopPanel:
                 self.btnCompiler.disable()
 
         else:
-            self.infoLabel.set_text("No Tower Selected")
+            self.infoLabel.set_text("// NO TOWER SELECTED")
             self.btnUpgrade.set_text("UPGRADE")
             self.btnUpgrade.disable()
             self.btnSell.set_text("SELL")
@@ -329,7 +334,7 @@ class ShopPanel:
 
         # Update CPU status
         pct = int((gameState.cpuHp / gameState.cpuMaxHp) * 100) if gameState.cpuMaxHp > 0 else 0
-        self.cpuStatusLabel.set_text(f"CPU Health: {int(gameState.cpuHp)}/{int(gameState.cpuMaxHp)} ({pct}%)")
+        self.cpuStatusLabel.set_text(f"INTEGRITY: {int(gameState.cpuHp)}/{int(gameState.cpuMaxHp)} HP ({pct}%)")
 
         # Update CPU Expand button state
         if gameState.canAfford(50):

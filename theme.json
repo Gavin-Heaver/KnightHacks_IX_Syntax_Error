@@ -12,19 +12,24 @@
     }
   },
   "button": {
+    "font": {
+      "name": "consolas",
+      "size": 13,
+      "bold": 1
+    },
     "colours": {
       "normal_bg": "#0e1a24",
       "hovered_bg": "#1a3e30",
       "active_bg": "#22553d",
-      "disabled_bg": "#10161c",
+      "disabled_bg": "#0a1017",
       "normal_text": "#c3f8dc",
       "hovered_text": "#ffffff",
-      "active_text": "#ffffff",
-      "disabled_text": "#4a6054",
+      "active_text": "#55fa91",
+      "disabled_text": "#3a4e44",
       "normal_border": "#2d8758",
       "hovered_border": "#55fa91",
       "active_border": "#69ffa0",
-      "disabled_border": "#1e3629"
+      "disabled_border": "#1a2b22"
     },
     "misc": {
       "border_width": "2",
@@ -34,14 +39,43 @@
     }
   },
   "label": {
+    "font": {
+      "name": "consolas",
+      "size": 13,
+      "bold": 1
+    },
     "colours": {
-      "normal_text": "#8ce1f5"
+      "normal_text": "#64d8cb"
+    }
+  },
+  "#shop_header": {
+    "font": {
+      "name": "consolas",
+      "size": 13,
+      "bold": 1
+    },
+    "colours": {
+      "normal_text": "#55fa91"
+    }
+  },
+  "#shop_info": {
+    "font": {
+      "name": "consolas",
+      "size": 13,
+      "bold": 1
+    },
+    "colours": {
+      "normal_text": "#44ddff"
     }
   },
   "text_box": {
+    "font": {
+      "name": "consolas",
+      "size": 12
+    },
     "colours": {
-      "dark_bg": "#080e14",
-      "normal_border": "#286f4b",
+      "dark_bg": "#070d13",
+      "normal_border": "#1e573a",
       "normal_text": "#dcf0f8"
     },
     "misc": {
@@ -52,8 +86,12 @@
     }
   },
   "text_entry_box": {
+    "font": {
+      "name": "consolas",
+      "size": 13
+    },
     "colours": {
-      "dark_bg": "#080e14",
+      "dark_bg": "#070d13",
       "normal_border": "#286f4b",
       "normal_text": "#69ffa0",
       "text_cursor": "#55fa91",
@@ -67,4 +105,3 @@
     }
   }
 }
-
