@@ -1,8 +1,6 @@
-# ui/pauseMenu.py -- Pause overlay with confirmation dialogs.
+# ui/pauseMenu.py -- Cyberpunk themed pause overlay with confirmation dialogs.
 import pygame
 import config
-
-
 from ui.volumeControls import VolumeModal
 from game.audio import audioManager
 
@@ -21,22 +19,26 @@ class PauseButton:
 
     def draw(self, screen, font):
         if self.style == "green":
-            bg = (32, 85, 48) if self.isHovered else (18, 50, 30)
-            border = (90, 240, 130) if self.isHovered else (50, 180, 85)
-            txtCol = (240, 255, 245) if self.isHovered else (190, 240, 205)
+            # Confirmation YES: Matrix emerald
+            bg = (28, 70, 45) if self.isHovered else (14, 38, 24)
+            border = (85, 250, 145) if self.isHovered else (45, 160, 85)
+            txtCol = (255, 255, 255) if self.isHovered else (195, 250, 215)
         elif self.style == "red":
-            bg = (95, 30, 36) if self.isHovered else (55, 20, 25)
-            border = (255, 90, 100) if self.isHovered else (200, 55, 65)
-            txtCol = (255, 240, 240) if self.isHovered else (245, 195, 195)
+            # Confirmation NO: Alert crimson
+            bg = (75, 22, 28) if self.isHovered else (42, 14, 18)
+            border = (255, 85, 95) if self.isHovered else (180, 45, 55)
+            txtCol = (255, 240, 240) if self.isHovered else (245, 185, 190)
         else:
-            bg = (42, 68, 98) if self.isHovered else (24, 38, 56)
-            border = (90, 180, 255) if self.isHovered else (50, 105, 165)
-            txtCol = (255, 255, 255) if self.isHovered else (200, 220, 240)
+            # Default Pause Button: Cyberpunk Terminal (matches Main Menu)
+            bg = (26, 62, 48) if self.isHovered else (14, 26, 36)
+            border = (85, 250, 145) if self.isHovered else (45, 135, 88)
+            txtCol = (255, 255, 255) if self.isHovered else (195, 248, 220)
 
         pygame.draw.rect(screen, bg, self.rect, border_radius=6)
         pygame.draw.rect(screen, border, self.rect, width=2, border_radius=6)
 
-        txtSurf = font.render(self.text, True, txtCol)
+        displayText = f"► {self.text}" if self.isHovered else self.text
+        txtSurf = font.render(displayText, True, txtCol)
         txtRect = txtSurf.get_rect(center=self.rect.center)
         screen.blit(txtSurf, txtRect)
 
@@ -48,11 +50,11 @@ class PauseMenu:
         self.state = "menu"  # "menu", "confirm_restart", "confirm_menu", "volume"
 
         # Fonts
-        self.titleFont = pygame.font.SysFont("consolas", 28, bold=True)
+        self.titleFont = pygame.font.SysFont("consolas", 30, bold=True)
         self.subTitleFont = pygame.font.SysFont("consolas", 22, bold=True)
         self.btnFont = pygame.font.SysFont("consolas", 20, bold=True)
         self.bodyFont = pygame.font.SysFont("consolas", 16)
-        self.hintFont = pygame.font.SysFont("consolas", 13)
+        self.hintFont = pygame.font.SysFont("consolas", 14)
 
         # Volume Controls Modal
         self.volumeModal = VolumeModal(screenW // 2, screenH // 2, width=600, height=440, backText="BACK TO PAUSE")
@@ -84,8 +86,8 @@ class PauseMenu:
         self.restartPanelRect = pygame.Rect(rx, ry, self.restartPanelW, self.restartPanelH)
 
         cBtnW, cBtnH = 140, 44
-        self.restartYesBtn = PauseButton((rx + 75, ry + 150, cBtnW, cBtnH), "YES", "confirm_restart_yes", style="green")
-        self.restartNoBtn = PauseButton((rx + self.restartPanelW - 75 - cBtnW, ry + 150, cBtnW, cBtnH), "NO", "confirm_restart_no", style="red")
+        self.restartYesBtn = PauseButton((rx + 75, ry + 152, cBtnW, cBtnH), "YES", "confirm_restart_yes", style="green")
+        self.restartNoBtn = PauseButton((rx + self.restartPanelW - 75 - cBtnW, ry + 152, cBtnW, cBtnH), "NO", "confirm_restart_no", style="red")
 
         # 3. Confirm Main Menu Dialog Box
         self.menuPanelW, self.menuPanelH = 580, 260
@@ -93,8 +95,8 @@ class PauseMenu:
         my = (self.screenH - self.menuPanelH) // 2
         self.menuPanelRect = pygame.Rect(mx, my, self.menuPanelW, self.menuPanelH)
 
-        self.menuYesBtn = PauseButton((mx + 95, my + 180, cBtnW, cBtnH), "YES", "confirm_menu_yes", style="green")
-        self.menuNoBtn = PauseButton((mx + self.menuPanelW - 95 - cBtnW, my + 180, cBtnW, cBtnH), "NO", "confirm_menu_no", style="red")
+        self.menuYesBtn = PauseButton((mx + 95, my + 182, cBtnW, cBtnH), "YES", "confirm_menu_yes", style="green")
+        self.menuNoBtn = PauseButton((mx + self.menuPanelW - 95 - cBtnW, my + 182, cBtnW, cBtnH), "NO", "confirm_menu_no", style="red")
 
     def open(self):
         """Opens pause menu at base menu state."""
@@ -179,10 +181,29 @@ class PauseMenu:
 
         return None
 
+    def _drawCyberFrame(self, screen, rect, fillAlpha=245, borderCol=(50, 150, 95), accCol=(80, 245, 140)):
+        """Draws frosted cyber glass container with glowing border and neon corner brackets."""
+        px, py, pw, ph = rect.x, rect.y, rect.w, rect.h
+        panelSurf = pygame.Surface((pw, ph), pygame.SRCALPHA)
+        panelSurf.fill((10, 18, 26, fillAlpha))
+        screen.blit(panelSurf, (px, py))
+        pygame.draw.rect(screen, borderCol, (px, py, pw, ph), 2, border_radius=8)
+
+        # High-voltage neon corner accents
+        cLen = 16
+        pygame.draw.line(screen, accCol, (px, py), (px + cLen, py), 3)
+        pygame.draw.line(screen, accCol, (px, py), (px, py + cLen), 3)
+        pygame.draw.line(screen, accCol, (px + pw, py), (px + pw - cLen, py), 3)
+        pygame.draw.line(screen, accCol, (px + pw, py), (px + pw, py + cLen), 3)
+        pygame.draw.line(screen, accCol, (px, py + ph), (px + cLen, py + ph), 3)
+        pygame.draw.line(screen, accCol, (px, py + ph), (px, py + ph - cLen), 3)
+        pygame.draw.line(screen, accCol, (px + pw, py + ph), (px + pw - cLen, py + ph), 3)
+        pygame.draw.line(screen, accCol, (px + pw, py + ph), (px + pw, py + ph - cLen), 3)
+
     def draw(self, screen):
-        # 1. Fullscreen semi-transparent backdrop
+        # 1. Darkened backdrop scrim with cyber scanline feel
         shade = pygame.Surface((self.screenW, self.screenH), pygame.SRCALPHA)
-        shade.fill((0, 0, 0, 160))
+        shade.fill((5, 10, 16, 175))
         screen.blit(shade, (0, 0))
 
         # 2. Render state modal
@@ -197,44 +218,51 @@ class PauseMenu:
 
     def _drawMainMenu(self, screen):
         rect = self.mainPanelRect
-        pygame.draw.rect(screen, (18, 25, 36), rect, border_radius=8)
-        pygame.draw.rect(screen, (50, 80, 120), rect, width=2, border_radius=8)
+        self._drawCyberFrame(screen, rect, fillAlpha=245, borderCol=(50, 150, 95), accCol=(80, 245, 140))
 
-        # Header accent bar
-        pygame.draw.rect(screen, (32, 48, 70), (rect.x + 2, rect.y + 2, rect.w - 4, 48),
-                         border_top_left_radius=7, border_top_right_radius=7)
-        pygame.draw.line(screen, (60, 100, 150), (rect.x, rect.y + 50), (rect.right, rect.y + 50), 2)
+        # Header Glow & Text: PAUSED
+        titleText = "PAUSED"
+        tSurf = self.titleFont.render(titleText, True, (105, 255, 160))
+        gSurf = self.titleFont.render(titleText, True, (20, 110, 65))
+        tRect = tSurf.get_rect(center=(rect.centerx, rect.y + 24))
+        screen.blit(gSurf, tRect.move(2, 2))
+        screen.blit(tSurf, tRect)
 
-        # Title
-        titleSurf = self.titleFont.render("PAUSED", True, (240, 245, 250))
-        titleRect = titleSurf.get_rect(center=(rect.centerx, rect.y + 26))
-        screen.blit(titleSurf, titleRect)
+        subSurf = self.hintFont.render("// SIMULATION SUSPENDED", True, (140, 225, 245))
+        screen.blit(subSurf, subSurf.get_rect(center=(rect.centerx, rect.y + 44)))
+
+        # Header horizontal divider line
+        pygame.draw.line(screen, (40, 115, 80), (rect.x + 25, rect.y + 56), (rect.right - 25, rect.y + 56), 1)
 
         # Buttons
         for b in self.mainButtons:
             b.draw(screen, self.btnFont)
 
         # Footer hint
-        hintSurf = self.hintFont.render("[ESC] / [ENTER] Resume", True, (130, 155, 180))
+        hintSurf = self.hintFont.render("[ESC] / [ENTER] Resume", True, (120, 175, 195))
         screen.blit(hintSurf, hintSurf.get_rect(center=(rect.centerx, rect.bottom - 16)))
 
     def _drawConfirmRestart(self, screen):
         rect = self.restartPanelRect
-        pygame.draw.rect(screen, (18, 25, 36), rect, border_radius=8)
-        pygame.draw.rect(screen, (220, 160, 60), rect, width=2, border_radius=8)
+        self._drawCyberFrame(screen, rect, fillAlpha=245, borderCol=(220, 150, 50), accCol=(255, 210, 70))
 
-        # Header accent bar
-        pygame.draw.rect(screen, (40, 32, 24), (rect.x + 2, rect.y + 2, rect.w - 4, 46),
-                         border_top_left_radius=7, border_top_right_radius=7)
-        pygame.draw.line(screen, (220, 160, 60), (rect.x, rect.y + 48), (rect.right, rect.y + 48), 2)
+        # Header Glow & Text: RESTART MISSION?
+        titleText = "// RESTART MISSION?"
+        tSurf = self.subTitleFont.render(titleText, True, (255, 210, 80))
+        gSurf = self.subTitleFont.render(titleText, True, (100, 70, 20))
+        tRect = tSurf.get_rect(center=(rect.centerx, rect.y + 28))
+        screen.blit(gSurf, tRect.move(2, 2))
+        screen.blit(tSurf, tRect)
 
-        # Title
-        titleSurf = self.subTitleFont.render("RESTART MISSION?", True, (255, 210, 80))
-        screen.blit(titleSurf, titleSurf.get_rect(center=(rect.centerx, rect.y + 25)))
+        # Header horizontal divider line
+        pygame.draw.line(screen, (160, 105, 35), (rect.x + 30, rect.y + 52), (rect.right - 30, rect.y + 52), 1)
 
         # Message
-        msgSurf = self.bodyFont.render("Are you sure, you will lose all progress", True, (230, 240, 250))
-        screen.blit(msgSurf, msgSurf.get_rect(center=(rect.centerx, rect.y + 95)))
+        msgSurf = self.bodyFont.render("Current wave progress will be completely erased.", True, (220, 235, 245))
+        screen.blit(msgSurf, msgSurf.get_rect(center=(rect.centerx, rect.y + 82)))
+
+        subMsg = self.bodyFont.render("All active defense towers will be dismantled.", True, (255, 130, 100))
+        screen.blit(subMsg, subMsg.get_rect(center=(rect.centerx, rect.y + 110)))
 
         # Buttons
         self.restartYesBtn.draw(screen, self.btnFont)
@@ -242,26 +270,27 @@ class PauseMenu:
 
     def _drawConfirmMenu(self, screen):
         rect = self.menuPanelRect
-        pygame.draw.rect(screen, (18, 25, 36), rect, border_radius=8)
-        pygame.draw.rect(screen, (220, 160, 60), rect, width=2, border_radius=8)
+        self._drawCyberFrame(screen, rect, fillAlpha=245, borderCol=(220, 150, 50), accCol=(255, 210, 70))
 
-        # Header accent bar
-        pygame.draw.rect(screen, (40, 32, 24), (rect.x + 2, rect.y + 2, rect.w - 4, 46),
-                         border_top_left_radius=7, border_top_right_radius=7)
-        pygame.draw.line(screen, (220, 160, 60), (rect.x, rect.y + 48), (rect.right, rect.y + 48), 2)
+        # Header Glow & Text: RETURN TO MAIN MENU?
+        titleText = "// RETURN TO MAIN MENU?"
+        tSurf = self.subTitleFont.render(titleText, True, (255, 210, 80))
+        gSurf = self.subTitleFont.render(titleText, True, (100, 70, 20))
+        tRect = tSurf.get_rect(center=(rect.centerx, rect.y + 28))
+        screen.blit(gSurf, tRect.move(2, 2))
+        screen.blit(tSurf, tRect)
 
-        # Title
-        titleSurf = self.subTitleFont.render("RETURN TO MAIN MENU?", True, (255, 210, 80))
-        screen.blit(titleSurf, titleSurf.get_rect(center=(rect.centerx, rect.y + 25)))
+        # Header horizontal divider line
+        pygame.draw.line(screen, (160, 105, 35), (rect.x + 30, rect.y + 52), (rect.right - 30, rect.y + 52), 1)
 
         # Multi-line message
-        line1 = self.bodyFont.render("This is an arcade style game.", True, (230, 240, 250))
-        line2 = self.bodyFont.render("Going to the Main Menu will have you lose progress.", True, (230, 240, 250))
-        line3 = self.bodyFont.render("Are you sure?", True, (255, 200, 80))
+        line1 = self.bodyFont.render("Arcade session active: Unfinished simulation data will be lost.", True, (220, 235, 245))
+        line2 = self.bodyFont.render("Only completed games are recorded to the Local Scoreboard.", True, (140, 225, 245))
+        line3 = self.bodyFont.render("Confirm abort protocol and return to title screen?", True, (255, 180, 70))
 
-        screen.blit(line1, line1.get_rect(center=(rect.centerx, rect.y + 82)))
-        screen.blit(line2, line2.get_rect(center=(rect.centerx, rect.y + 110)))
-        screen.blit(line3, line3.get_rect(center=(rect.centerx, rect.y + 138)))
+        screen.blit(line1, line1.get_rect(center=(rect.centerx, rect.y + 84)))
+        screen.blit(line2, line2.get_rect(center=(rect.centerx, rect.y + 112)))
+        screen.blit(line3, line3.get_rect(center=(rect.centerx, rect.y + 140)))
 
         # Buttons
         self.menuYesBtn.draw(screen, self.btnFont)

@@ -18,7 +18,7 @@ class CodeEditor:
         )
 
         self.titleLabel = UILabel(
-            relative_rect=pygame.Rect((10, 10), (264, 30)), text="TOWER COMPILER", manager=self.uiManager, container=self.panel
+            relative_rect=pygame.Rect((10, 10), (264, 30)), text="// TOWER COMPILER", manager=self.uiManager, container=self.panel
         )
 
         self.codeBox = UITextEntryBox(
@@ -34,7 +34,7 @@ class CodeEditor:
         )
 
         self.consoleBox = UITextBox(
-            html_text="Console ready...", relative_rect=pygame.Rect((10, 450), (264, 180)), manager=self.uiManager, container=self.panel
+            html_text="// CONSOLE READY // AWAITING COMPILE...", relative_rect=pygame.Rect((10, 450), (264, 180)), manager=self.uiManager, container=self.panel
         )
 
     def open(self, tool):
@@ -44,12 +44,12 @@ class CodeEditor:
         self.codeBox.set_text(tool.script.sourceCode)
 
         if getattr(tool, "corrupted", False):
-            self.titleLabel.set_text(f"{tool.kind.upper()} COMPILER [INFECTED!]")
+            self.titleLabel.set_text(f"// {tool.kind.upper()} [MALWARE INFECTED!]")
             errorMsg = tool.script.error or "Injected malware detected."
-            self.consoleBox.set_text(f"<font color='#FF4646'><b>MALWARE INFECTION DETECTED:</b></font><br>{errorMsg}")
+            self.consoleBox.set_text(f"<font color='#FF4646'><b>// MALWARE INFECTION DETECTED:</b></font><br>{errorMsg}")
         else:
-            self.titleLabel.set_text(f"{tool.kind.upper()} COMPILER (Tier: {tool.tier})")
-            self.consoleBox.set_text("Console ready...")
+            self.titleLabel.set_text(f"// {tool.kind.upper()} COMPILER (T{tool.tier + 1})")
+            self.consoleBox.set_text("// CONSOLE READY // AWAITING COMPILE...")
 
         self.panel.show()
         
@@ -72,15 +72,15 @@ class CodeEditor:
                 self.currentTool.corrupted = False
                 if board is not None:
                     board.dirty = True
-                self.titleLabel.set_text(f"{self.currentTool.kind.upper()} COMPILER (Tier: {self.currentTool.tier})")
-                self.consoleBox.set_text("<font color='#46C878'><b>Malware Purged!</b></font><br>Tower restored to friendly operation.")
+                self.titleLabel.set_text(f"// {self.currentTool.kind.upper()} COMPILER (T{self.currentTool.tier + 1})")
+                self.consoleBox.set_text("<font color='#55FA91'><b>// MALWARE PURGED!</b></font><br>Tower restored to friendly operation.")
             else:
-                self.consoleBox.set_text("<font color='#46C878'><b>Compile Successful!</b></font><br>Tower logic updated.")
+                self.consoleBox.set_text("<font color='#55FA91'><b>// COMPILE SUCCESSFUL!</b></font><br>Tower logic flashed to hardware.")
         
         else:
             audioManager.sfx("corrupt")
             errorMsg = self.currentTool.script.error
-            self.consoleBox.set_text(f"<font color='#FF4646'><b>Compile Error:</b></font><br>{errorMsg}")
+            self.consoleBox.set_text(f"<font color='#FF4646'><b>// COMPILE ERROR:</b></font><br>{errorMsg}")
 
     def handleEvent(self, event, unlockedConcepts=None, board=None):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:

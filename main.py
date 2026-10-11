@@ -191,28 +191,57 @@ def drawBoard():
         centerPixelX = config.BOARD_X + (hoverX + 0.5) * config.TILE
         centerPixelY = config.BOARD_Y + (hoverY + 0.5) * config.TILE
 
+        prevRect = tileRect(hoverX, hoverY)
+        prevSurf = pygame.Surface((prevRect.width, prevRect.height), pygame.SRCALPHA)
+
         if board.isBuildable(hoverX, hoverY):
-            previewColor = (180, 255, 180)
-            pygame.draw.rect(screen, previewColor, tileRect(hoverX, hoverY), width=2)
+            previewColor = (85, 250, 145)
+            prevSurf.fill((65, 240, 135, 45))
+            screen.blit(prevSurf, prevRect.topleft)
+            pygame.draw.rect(screen, previewColor, prevRect, width=2)
             
             toolRange = config.TOOL_STATS[shopPanel.selectedToolType]["range"]
             if toolRange > 0:
                 radius = int(toolRange * config.TILE)
                 pygame.draw.circle(screen, previewColor, (int(centerPixelX), int(centerPixelY)), radius, width=1)
         else:
-            previewColor = (255, 70, 70)
-            pygame.draw.rect(screen, previewColor, tileRect(hoverX, hoverY), width=2)
+            previewColor = (255, 75, 85)
+            prevSurf.fill((255, 55, 65, 45))
+            screen.blit(prevSurf, prevRect.topleft)
+            pygame.draw.rect(screen, previewColor, prevRect, width=2)
 
-    # Board outer boundary frame
-    boardOutline = pygame.Rect(config.BOARD_X - 1, config.BOARD_Y - 1,
-                               config.BOARD_PX_W + 2, config.BOARD_PX_H + 2)
-    pygame.draw.rect(screen, (40, 55, 75), boardOutline, 2)
+    # Board outer boundary frame with wireframe emerald border & neon corner brackets
+    bx, by = config.BOARD_X, config.BOARD_Y
+    bw, bh = config.BOARD_PX_W, config.BOARD_PX_H
+    pygame.draw.rect(screen, (35, 110, 75), (bx - 1, by - 1, bw + 2, bh + 2), 2)
+
+    cLen = 14
+    accCol = (80, 245, 140)
+    pygame.draw.line(screen, accCol, (bx - 1, by - 1), (bx - 1 + cLen, by - 1), 2)
+    pygame.draw.line(screen, accCol, (bx - 1, by - 1), (bx - 1, by - 1 + cLen), 2)
+    pygame.draw.line(screen, accCol, (bx + bw + 1, by - 1), (bx + bw + 1 - cLen, by - 1), 2)
+    pygame.draw.line(screen, accCol, (bx + bw + 1, by - 1), (bx + bw + 1, by - 1 + cLen), 2)
+    pygame.draw.line(screen, accCol, (bx - 1, by + bh + 1), (bx - 1 + cLen, by + bh + 1), 2)
+    pygame.draw.line(screen, accCol, (bx - 1, by + bh + 1), (bx - 1, by + bh + 1 - cLen), 2)
+    pygame.draw.line(screen, accCol, (bx + bw + 1, by + bh + 1), (bx + bw + 1 - cLen, by + bh + 1), 2)
+    pygame.draw.line(screen, accCol, (bx + bw + 1, by + bh + 1), (bx + bw + 1, by + bh + 1 - cLen), 2)
 
     for y in range(board.height):
         for x in range(board.width):
             pygame.draw.rect(screen, config.COLOR_GRID, tileRect(x, y), 1)
+
+    # Microprocessor CPU socket with silicon core and gold contact pins
     for (x, y) in board.cpuTiles:
-        pygame.draw.rect(screen, config.COLOR_CPU, tileRect(x, y).inflate(-2, -2))
+        cRect = tileRect(x, y).inflate(-2, -2)
+        pygame.draw.rect(screen, (16, 50, 32), cRect)
+        pygame.draw.rect(screen, (65, 220, 125), cRect, 1)
+        innerCore = cRect.inflate(-6, -6)
+        pygame.draw.rect(screen, (30, 110, 68), innerCore)
+        # Corner gold circuit contact pins
+        pygame.draw.circle(screen, (245, 210, 80), (cRect.left + 3, cRect.top + 3), 1)
+        pygame.draw.circle(screen, (245, 210, 80), (cRect.right - 3, cRect.top + 3), 1)
+        pygame.draw.circle(screen, (245, 210, 80), (cRect.left + 3, cRect.bottom - 3), 1)
+        pygame.draw.circle(screen, (245, 210, 80), (cRect.right - 3, cRect.bottom - 3), 1)
 
     # Firewall plasma links between aligned posts within range
     damTiles = board.damagingPlasmaTiles
@@ -240,18 +269,34 @@ def drawBoard():
             pygame.draw.circle(screen, (255, 180, 70), (cx, cy), 3)
 
     for tool in board.allTools():
-        color = config.TOOL_COLORS.get(tool.kind, config.COLOR_TOOL)
         tRect = tileRect(tool.x, tool.y).inflate(-4, -4)
-        pygame.draw.rect(screen, color, tRect)
-
         isCorrupted = getattr(tool, "corrupted", False)
+
         if isCorrupted:
-            # Red outline
-            pygame.draw.rect(screen, (255, 30, 30), tRect, width=2)
-            # Red cross 'X'
+            pygame.draw.rect(screen, (55, 16, 22), tRect)
+            pygame.draw.rect(screen, (255, 55, 65), tRect, width=2)
             m = 5
-            pygame.draw.line(screen, (255, 40, 40), (tRect.left + m, tRect.top + m), (tRect.right - m, tRect.bottom - m), 2)
-            pygame.draw.line(screen, (255, 40, 40), (tRect.left + m, tRect.bottom - m), (tRect.right - m, tRect.top + m), 2)
+            pygame.draw.line(screen, (255, 75, 75), (tRect.left + m, tRect.top + m), (tRect.right - m, tRect.bottom - m), 2)
+            pygame.draw.line(screen, (255, 75, 75), (tRect.left + m, tRect.bottom - m), (tRect.right - m, tRect.top + m), 2)
+        else:
+            if tool.kind in ("debugger", "turret"):
+                pygame.draw.rect(screen, (18, 45, 75), tRect)
+                pygame.draw.rect(screen, (75, 175, 255), tRect, width=2)
+                core = tRect.inflate(-8, -8)
+                pygame.draw.rect(screen, (160, 230, 255), core)
+            elif tool.kind == "firewall":
+                pygame.draw.rect(screen, (60, 28, 12), tRect)
+                pygame.draw.rect(screen, (255, 130, 35), tRect, width=2)
+                core = tRect.inflate(-8, -8)
+                pygame.draw.rect(screen, (255, 215, 120), core)
+            elif tool.kind == "antivirus":
+                pygame.draw.rect(screen, (45, 20, 65), tRect)
+                pygame.draw.rect(screen, (185, 100, 255), tRect, width=2)
+                core = tRect.inflate(-8, -8)
+                pygame.draw.rect(screen, (235, 185, 255), core)
+            else:
+                color = config.TOOL_COLORS.get(tool.kind, config.COLOR_TOOL)
+                pygame.draw.rect(screen, color, tRect)
 
         # Tier 3 Debugger (formerly Turret) constant laser beam
         if tool.kind in ("debugger", "turret") and getattr(tool, "tier", 0) >= 2:
@@ -618,15 +663,52 @@ while running:
         if phase == config.PHASE_BUILD:
             msg = None
             if waveCountdown is not None:
-                msg = f"WAVE {gameState.wave} IN {math.ceil(waveCountdown)}"
+                msg = f"► INCOMING SWARM // WAVE {gameState.wave} IN {math.ceil(waveCountdown)}s"
             elif gameState.wave == 1:
-                msg = "PRESS ENTER TO BEGIN"
+                msg = "► SYSTEM READY // PRESS [ENTER] TO COMMENCE WAVE 1"
             if msg:
-                text = bannerFont.render(msg, True, config.COLOR_TEXT)
-                screen.blit(text, text.get_rect(center=(config.BOARD_X + config.BOARD_PX_W // 2,
-                                                        config.BOARD_Y + 30)))
+                textSurf = bannerFont.render(msg, True, (105, 255, 160))
+                glowSurf = bannerFont.render(msg, True, (20, 110, 65))
+                bCenter = (config.BOARD_X + config.BOARD_PX_W // 2, config.BOARD_Y + 30)
+                bRect = textSurf.get_rect(center=bCenter)
+
+                # Frosted cyber glass banner pill
+                bannerPill = bRect.inflate(36, 12)
+                pillSurf = pygame.Surface((bannerPill.width, bannerPill.height), pygame.SRCALPHA)
+                pillSurf.fill((10, 18, 26, 230))
+                screen.blit(pillSurf, bannerPill.topleft)
+                pygame.draw.rect(screen, (45, 135, 88), bannerPill, width=2, border_radius=6)
+
+                # Corner accent ticks
+                cLen = 8
+                accCol = (80, 245, 140)
+                pygame.draw.line(screen, accCol, bannerPill.topleft, (bannerPill.left + cLen, bannerPill.top), 2)
+                pygame.draw.line(screen, accCol, bannerPill.topleft, (bannerPill.left, bannerPill.top + cLen), 2)
+                pygame.draw.line(screen, accCol, bannerPill.topright, (bannerPill.right - cLen, bannerPill.top), 2)
+                pygame.draw.line(screen, accCol, bannerPill.topright, (bannerPill.right, bannerPill.top + cLen), 2)
+                pygame.draw.line(screen, accCol, bannerPill.bottomleft, (bannerPill.left + cLen, bannerPill.bottom), 2)
+                pygame.draw.line(screen, accCol, bannerPill.bottomleft, (bannerPill.left, bannerPill.bottom - cLen), 2)
+                pygame.draw.line(screen, accCol, bannerPill.bottomright, (bannerPill.right - cLen, bannerPill.bottom), 2)
+                pygame.draw.line(screen, accCol, bannerPill.bottomright, (bannerPill.right, bannerPill.bottom - cLen), 2)
+
+                screen.blit(glowSurf, bRect.move(2, 2))
+                screen.blit(textSurf, bRect)
 
         uiManager.draw_ui(screen)
+
+        # High-voltage neon corner accents on Shop / Editor panel dock
+        spx, spy = 980, config.BOARD_Y
+        spw, sph = 284, config.BOARD_PX_H
+        cLen = 14
+        accCol = (80, 245, 140)
+        pygame.draw.line(screen, accCol, (spx, spy), (spx + cLen, spy), 2)
+        pygame.draw.line(screen, accCol, (spx, spy), (spx, spy + cLen), 2)
+        pygame.draw.line(screen, accCol, (spx + spw, spy), (spx + spw - cLen, spy), 2)
+        pygame.draw.line(screen, accCol, (spx + spw, spy), (spx + spw, spy + cLen), 2)
+        pygame.draw.line(screen, accCol, (spx, spy + sph), (spx + cLen, spy + sph), 2)
+        pygame.draw.line(screen, accCol, (spx, spy + sph), (spx, spy + sph - cLen), 2)
+        pygame.draw.line(screen, accCol, (spx + spw, spy + sph), (spx + spw - cLen, spy + sph), 2)
+        pygame.draw.line(screen, accCol, (spx + spw, spy + sph), (spx + spw, spy + sph - cLen), 2)
 
         # pause overlay on top of everything (including the shop/editor panels)
         if paused:

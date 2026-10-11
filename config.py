@@ -158,18 +158,18 @@ STRAGGLER_CHANCE = 0.1
 WAVE_BREAK_SECONDS = 15.0
 
 # ---------------------------------------------------------------- colors
-COLOR_BG = (14, 18, 24)
-COLOR_GRID = (28, 36, 46)
-COLOR_CPU = (70, 200, 120)
-COLOR_TOOL = (90, 160, 255)
-COLOR_ENEMY = (255, 90, 90)
-COLOR_TEXT = (220, 230, 240)
-COLOR_ERROR = (255, 70, 70)
+COLOR_BG = (10, 14, 20)         # Deep obsidian cipher background
+COLOR_GRID = (22, 32, 44)       # Subtle circuit grid lines
+COLOR_CPU = (45, 175, 95)       # High-tech matrix emerald CPU core
+COLOR_TOOL = (90, 160, 255)     # Cyber blue default tool
+COLOR_ENEMY = (255, 90, 90)     # Alert red enemy default
+COLOR_TEXT = (220, 240, 250)    # Crisp cyber terminal text
+COLOR_ERROR = (255, 70, 70)     # Crash dump alert red
 
 #Temps until art is made
-COLOR_DEBUGGER = (90, 160, 255) # Blue (attacker)
-COLOR_FIREWALL = (255, 130, 40) # Orange
-COLOR_ANTIVIRUS = (185, 100, 255) # Purple (support scanner)
+COLOR_DEBUGGER = (75, 165, 255) # Cyber Blue (attacker)
+COLOR_FIREWALL = (255, 130, 35) # Plasma Orange (barrier)
+COLOR_ANTIVIRUS = (185, 100, 255) # Neon Violet (radar scanner)
 COLOR_TURRET = COLOR_DEBUGGER   # alias
 
 TOOL_COLORS = {
