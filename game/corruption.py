@@ -1,5 +1,6 @@
 # game/corruption.py -- Injects malware code and corrupts programmable tools.
 import random
+from game.audio import audioManager
 
 
 CORRUPTION_INJECTIONS = [
@@ -17,6 +18,7 @@ def corrupt(tool):
     if not getattr(tool, "programmable", False) or getattr(tool, "corrupted", False):
         return
     tool.corrupted = True
+    audioManager.sfx("corrupt")
     snippet = random.choice(CORRUPTION_INJECTIONS)
     # Prepend malware payload to source code
     tool.script.sourceCode = snippet + tool.script.sourceCode

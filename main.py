@@ -87,6 +87,7 @@ def toggleFullscreen():
         pygame.display.set_mode((config.SCREEN_W, config.SCREEN_H), newFlags)
 
 clock = pygame.time.Clock()
+audioManager.startMusic()       # background soundtrack loops for the whole session
 uiManager = pygame_gui.UIManager((config.SCREEN_W, config.SCREEN_H))
 running = True
 
@@ -499,6 +500,7 @@ while running:
                 existing = board.toolAt(tx, ty)
                 if existing is not None:
                     selectedTool = existing
+                    audioManager.sfx("select")
                     codeEditor.close()
                     shopPanel.panel.show()
                 elif board.isBuildable(tx, ty):
@@ -507,10 +509,13 @@ while running:
                     if gameState.spendBytes(cost):
                         if toolType in ("debugger", "turret"):
                             board.place(Debugger(tx, ty), tx, ty)
+                            audioManager.sfx("place")
                         elif toolType == "firewall":
                             board.place(Firewall(tx, ty), tx, ty)
+                            audioManager.sfx("place")
                         elif toolType == "antivirus":
                             board.place(Antivirus(tx, ty), tx, ty)
+                            audioManager.sfx("antivirus")
 
                     selectedTool = None
                     codeEditor.close()
@@ -520,6 +525,7 @@ while running:
                 removedTool = board.remove(tx, ty)
                 if removedTool:
                     gameState.refundBytes(removedTool.spent)
+                    audioManager.sfx("back")
                 selectedTool = None
                 codeEditor.close()
         ###DEBUG

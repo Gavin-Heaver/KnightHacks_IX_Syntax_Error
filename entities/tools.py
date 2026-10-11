@@ -2,6 +2,7 @@
 import config
 import math
 from game import events
+from game.audio import audioManager
 
 from scripting.runner import TowerScript
 from scripting.defaults import DEFAULT_DEBUGGER_SCRIPT, DEFAULT_ANTIVIRUS_SCRIPT, DEFAULT_TURRET_SCRIPT
@@ -30,6 +31,7 @@ class DefenseTool:
         self.hp -= n
         if self.hp <= 0:
             self.hp = 0
+            audioManager.sfx("toolBreak")
             events.emit("toolDestroyed", self)
 
     def corrupt(self):
@@ -120,6 +122,8 @@ class Debugger(DefenseTool):
                     # Tier 3 (Laser): Constant laser beam dealing continuous half damage to friendly tool
                     if candidateTools:
                         targetTool = candidateTools[0]
+                        if self.laserTarget is not targetTool:
+                            audioManager.sfx("laser")   # beam locks onto a new target
                         laserDps = (self.damage * 0.5) * self.fireRate
                         targetTool.takeDamage(laserDps * dt)
                         board.hpChanged = True
@@ -145,6 +149,7 @@ class Debugger(DefenseTool):
                             sourceTool=self
                         )
                         newProjectilesList.append(bullet)
+                        audioManager.sfx("laser")
                         self.fireCooldown = 1.0 / self.fireRate
             return
 
@@ -163,6 +168,8 @@ class Debugger(DefenseTool):
                 cx, cy = self.x + 0.5, self.y + 0.5
                 dist = math.hypot(self.aimTarget.x - cx, self.aimTarget.y - cy)
                 if dist <= self.range:
+                    if self.laserTarget is not self.aimTarget:
+                        audioManager.sfx("laser")   # beam locks onto a new target
                     laserDps = self.damage * self.fireRate
                     self.aimTarget.takeDamage(laserDps * dt)
                     self.laserTarget = self.aimTarget
@@ -189,6 +196,7 @@ class Debugger(DefenseTool):
                         homingTarget=homing
                     )
                     newProjectilesList.append(bullet)
+                    audioManager.sfx("laser")
                     self.fireCooldown = 1.0 / self.fireRate
                 self.wantsToFire = False
 

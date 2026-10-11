@@ -4,6 +4,7 @@ import config
 
 
 from ui.volumeControls import VolumeModal
+from game.audio import audioManager
 
 
 class PauseButton:
@@ -111,6 +112,7 @@ class PauseMenu:
         if self.state == "volume":
             action = self.volumeModal.handleEvent(event)
             if action == "back":
+                audioManager.sfx("back")
                 self.state = "menu"
             return None
 
@@ -131,6 +133,7 @@ class PauseMenu:
             if self.state == "menu":
                 for b in self.mainButtons:
                     if b.rect.collidepoint(mpos):
+                        audioManager.sfx("select")
                         if b.actionKey == "resume":
                             return "resume"
                         elif b.actionKey == "volume":
@@ -143,22 +146,27 @@ class PauseMenu:
 
             elif self.state == "confirm_restart":
                 if self.restartYesBtn.rect.collidepoint(mpos):
+                    audioManager.sfx("select")
                     self.state = "menu"
                     return "restart"
                 elif self.restartNoBtn.rect.collidepoint(mpos):
+                    audioManager.sfx("back")
                     self.state = "menu"
                     return None
 
             elif self.state == "confirm_menu":
                 if self.menuYesBtn.rect.collidepoint(mpos):
+                    audioManager.sfx("select")
                     self.state = "menu"
                     return "main_menu"
                 elif self.menuNoBtn.rect.collidepoint(mpos):
+                    audioManager.sfx("back")
                     self.state = "menu"
                     return None
 
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
+                audioManager.sfx("back")
                 if self.state in ("confirm_restart", "confirm_menu", "volume"):
                     self.state = "menu"
                 else:
@@ -166,6 +174,7 @@ class PauseMenu:
 
             elif event.key == pygame.K_RETURN:
                 if self.state == "menu":
+                    audioManager.sfx("select")
                     return "resume"
 
         return None

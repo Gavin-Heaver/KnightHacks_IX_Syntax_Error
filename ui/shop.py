@@ -3,6 +3,7 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UIButton, UILabel, UITextBox
 import config
+from game.audio import audioManager
 
 class ShopPanel:
     def __init__(self, uiManager):
@@ -341,10 +342,13 @@ class ShopPanel:
             # Grid Placement Selection
             if event.ui_element == self.btnDebugger:
                 self.selectedToolType = "debugger"
+                audioManager.sfx("select")
             elif event.ui_element == self.btnFirewall:
                 self.selectedToolType = "firewall"
+                audioManager.sfx("select")
             elif event.ui_element == self.btnAntivirus:
                 self.selectedToolType = "antivirus"
+                audioManager.sfx("select")
 
             # Upgrade
             elif event.ui_element == self.btnUpgrade and selectedTool is not None:
@@ -354,6 +358,7 @@ class ShopPanel:
                     if gameState.spendBytes(cost):
                         selectedTool.upgrade()
                         board.dirty = True
+                        audioManager.sfx("upgrade")
 
             # Repair
             elif event.ui_element == self.btnRepair and selectedTool is not None:
@@ -362,20 +367,24 @@ class ShopPanel:
                     repairCost = max(1, int(math.ceil(missingHp * config.REPAIR_COST_PER_HP)))
                     if gameState.spendBytes(repairCost):
                         selectedTool.hp = float(selectedTool.maxHp)
+                        audioManager.sfx("upgrade")
 
             # Sell
             elif event.ui_element == self.btnSell and selectedTool is not None:
                 board.remove(selectedTool.x, selectedTool.y)
                 gameState.refundBytes(selectedTool.spent)
+                audioManager.sfx("back")
                 return "deselected"
 
             # Open compiler
             elif event.ui_element == self.btnCompiler and selectedTool is not None:
                 if getattr(selectedTool, "programmable", False):
+                    audioManager.sfx("select")
                     return "open_compiler"
 
             # Expand CPU
             elif event.ui_element == self.btnExpandCPU:
-                gameState.upgradeCpuMaxHp(25, 50)
+                if gameState.upgradeCpuMaxHp(25, 50):
+                    audioManager.sfx("upgrade")
 
         return None

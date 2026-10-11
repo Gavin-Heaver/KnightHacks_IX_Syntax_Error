@@ -3,6 +3,7 @@ import os
 import json
 import pygame
 import config
+from game.audio import audioManager
 
 
 SCOREBOARD_FILE = "scoreboard.json"
@@ -143,6 +144,7 @@ class StartMenu:
         if self.state == "volume":
             action = self.volumeModal.handleEvent(event)
             if action == "back":
+                audioManager.sfx("back")
                 self.state = "main"
             return None
 
@@ -159,6 +161,7 @@ class StartMenu:
             if self.state == "main":
                 for b in self.mainButtons:
                     if b.rect.collidepoint(mpos):
+                        audioManager.sfx("select")
                         if b.actionKey == "play":
                             return "play"
                         elif b.actionKey == "fullscreen":
@@ -170,12 +173,14 @@ class StartMenu:
                             return None
             else:
                 if self.backBtn.rect.collidepoint(mpos):
+                    audioManager.sfx("back")
                     self.state = "main"
                     return None
 
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 if self.state != "main":
+                    audioManager.sfx("back")
                     self.state = "main"
                     return None
                 else:
