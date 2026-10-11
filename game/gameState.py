@@ -66,3 +66,20 @@ class GameState:
             return True
 
         return False
+
+    def upgradeCpuMaxHp(self, amount=25, cost=50):
+        """Expands CPU max HP and heals by the amount increased."""
+        if self.spendBytes(cost):
+            self.cpuMaxHp += amount
+            self.cpuHp = min(self.cpuMaxHp, self.cpuHp + amount)
+            return True
+        return False
+
+    def regenerateCpuBetweenWaves(self, percent=0.25):
+        """Restores a percentage of missing CPU health between waves."""
+        missing = self.cpuMaxHp - self.cpuHp
+        if missing > 0:
+            restored = missing * percent
+            self.cpuHp = min(self.cpuMaxHp, self.cpuHp + restored)
+            return restored
+        return 0.0

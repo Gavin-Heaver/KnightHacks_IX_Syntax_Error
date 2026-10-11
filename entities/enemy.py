@@ -181,7 +181,7 @@ class Enemy:
     @staticmethod
     def _walkable(board, fx, fy):
         tx, ty = math.floor(fx), math.floor(fy)
-        return board.inBounds(tx, ty) and not board.isCpu(tx, ty) and board.toolAt(tx, ty) is None
+        return board.inBounds(tx, ty) and not board.isCpu(tx, ty) and board.toolAt(tx, ty) is None and (tx, ty) not in board.plasmaTiles
 
     @staticmethod
     def _adjacentTower(board, tileX, tileY):

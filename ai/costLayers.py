@@ -27,8 +27,12 @@ def makeCost(board, enemyType, fire, fear, fireWeight = None):
     w = config.AI_WEIGHTS[enemyType]
     if fireWeight is None:
         fireWeight = w["fire"]
+    plasma = board.plasmaTiles
 
     def cost(x, y):
+        if (x, y) in plasma:
+            return None
+
         if board.isCpu(x, y):
             return 1.0
 
