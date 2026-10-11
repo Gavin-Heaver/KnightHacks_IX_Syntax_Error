@@ -87,13 +87,15 @@ class Enemy:
             sepX, sepY = separation(self, enemies, config.SEPARATION_RADIUS)
             sepWeight = config.SEPARATION_WEIGHT
 
-        if approaching:
-            if math.hypot(self.spotX - self.x, self.spotY - self.y) <= config.ATTACK_RANGE:
-                events.emit("cpuHit", self, self.dps * dt)
-                self._nudge(board, sepX, sepY, dt)
-            else:
-                self._steerToward(board, self.spotX, self.spotY, sepX, sepY, sepWeight, dt)
-            return
+            if approaching:
+                onSpot = math.hypot(self.spotX - self.x, self.spotY - self.y) <= config.ATTACK_RANGE
+                if onSpot or self._touchingCpu():
+                    events.emit("cpuHit", self, self.dps * dt)
+                    self._nudge(board, sepX, sepY, dt)
+                else:
+                    self._steerToward(board, self.spotX, self.spotY, sepX, sepY, sepWeight, dt)
+                return
+
 
         #finding the gradient pointing towards the CPU- if none, stay put
         step = nextStep(dist, board, tileX, tileY)
@@ -189,3 +191,7 @@ class Enemy:
                 return tool
         return None
 
+    def _touchingCpu(self):
+        nearX = min(max(self.x, config.CPU_X), config.CPU_X + config.CPU_W)
+        nearY = min(max(self.y, config.CPU_Y), config.CPU_Y + config.CPU_H)
+        return math.hypot(self.x - nearX, self.y - nearY) <= self.size + 0.3
