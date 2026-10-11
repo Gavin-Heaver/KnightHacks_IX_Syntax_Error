@@ -86,6 +86,7 @@ class Enemy:
                 else:
                     sepX, sepY = separation(self, enemies, config.SWARM_SEP_RADIUS)
                     tower.takeDamage(self.dps * dt)
+                    board.hpChanged = True
                     self._nudge(board, sepX, sepY, dt)
                 return
 
@@ -99,14 +100,14 @@ class Enemy:
             sepX, sepY = separation(self, enemies, config.SEPARATION_RADIUS)
             sepWeight = config.SEPARATION_WEIGHT
 
-            if approaching:
-                onSpot = math.hypot(self.spotX - self.x, self.spotY - self.y) <= config.ATTACK_RANGE
-                if onSpot or self._touchingCpu():
-                    events.emit("cpuHit", self, self.dps * dt)
-                    self._nudge(board, sepX, sepY, dt)
-                else:
-                    self._steerToward(board, self.spotX, self.spotY, sepX, sepY, sepWeight, dt)
-                return
+        if approaching:
+            onSpot = math.hypot(self.spotX - self.x, self.spotY - self.y) <= config.ATTACK_RANGE
+            if onSpot or self._touchingCpu():
+                events.emit("cpuHit", self, self.dps * dt)
+                self._nudge(board, sepX, sepY, dt)
+            else:
+                self._steerToward(board, self.spotX, self.spotY, sepX, sepY, sepWeight, dt)
+            return
 
 
         #finding the gradient pointing towards the CPU- if none, stay put
@@ -127,6 +128,7 @@ class Enemy:
         tool = board.toolAt(targetTX, targetTY)
         if tool:
             tool.takeDamage(self.dps * dt)
+            board.hpChanged = True
             self._nudge(board, sepX, sepY, dt)
             return
 

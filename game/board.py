@@ -17,6 +17,7 @@ class Board:
             for dx in range(config.CPU_W)
         ]
         self.dirty = True       # True after any change -> flow fields get rebuilt
+        self.hpChanged = False  # True after a tool takes damage -> fields refreshed on the next AI tick
 
     # ------------------------------------------------------------ queries
     def inBounds(self, x, y):

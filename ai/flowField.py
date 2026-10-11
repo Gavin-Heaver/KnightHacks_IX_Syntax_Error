@@ -11,6 +11,11 @@ NEIGHBORS = [
 def buildField(board, goals, cost):
     width, height = board.width, board.height
 
+    #cost of entering each tile, worked out once up front (None = impassable)
+    #instead of 8 times per tile inside the search loop
+    costGrid = [[cost(x, y) for x in range(width)] for y in range(height)]
+    solid = [[tool is not None for tool in row] for row in board.tools]
+
     #tiles start as unvisited
     dist = [[INF] * width for _ in range(height)]
 
@@ -32,16 +37,15 @@ def buildField(board, goals, cost):
         for dx, dy, step in NEIGHBORS:
             nx, ny = x + dx, y + dy
 
-            if not board.inBounds(nx, ny):
+            if not (0 <= nx < width and 0 <= ny < height):
                 continue
 
             #checking to see if diagonal movement is blocked by a tool
-            if dx and dy:
-                if board.toolAt(x + dx, y) or board.toolAt(x, y + dy):
-                    continue
+            if dx and dy and (solid[y][nx] or solid[ny][x]):
+                continue
 
-            #calculating cost function for tile
-            c = cost(nx, ny)
+            #cost of entering the tile (precomputed above)
+            c = costGrid[ny][nx]
             if c is None:
                 continue
             newDist = d + step * c

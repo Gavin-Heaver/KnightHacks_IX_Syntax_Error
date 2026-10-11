@@ -18,7 +18,7 @@ class DebugOverlay:
         self.view = 0
         self.layer = None
         self.cacheKey = None
-        self.cachedFields = None
+        self.cachedDist = None
         self.cachedFear = None
         self.font = pygame.font.SysFont("consolas", 14)
 
@@ -35,11 +35,12 @@ class DebugOverlay:
         views = [(target, enemyType) for target in fields for enemyType in fields[target]]
         target, enemyType = views[self.view % len(views)]
 
-        #fields and the fear grid are new objects after every rebuild / AI tick -> only re-render then
+        #each field and the fear grid are new objects after every rebuild / AI tick -> only re-render then
+        dist = fields[target][enemyType]
         key = (self.mode, target, enemyType)
-        if key != self.cacheKey or fields is not self.cachedFields or fear is not self.cachedFear:
-            self.layer = self._render(board, fields[target][enemyType], fear, target, enemyType)
-            self.cacheKey, self.cachedFields, self.cachedFear = key, fields, fear
+        if key != self.cacheKey or dist is not self.cachedDist or fear is not self.cachedFear:
+            self.layer = self._render(board, dist, fear, target, enemyType)
+            self.cacheKey, self.cachedDist, self.cachedFear = key, dist, fear
 
         screen.blit(self.layer, (config.BOARD_X, config.BOARD_Y))
         label = f"{MODES[self.mode].upper()}: {enemyType} -> {target}    [F1 mode  F2 field]"
