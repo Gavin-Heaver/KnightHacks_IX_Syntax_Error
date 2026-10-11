@@ -1,9 +1,38 @@
 # game/audio.py -- Global audio management and volume controls for Music & SFX.
 import os
 import json
+import random
 import pygame
 
 SETTINGS_FILE = "audio_settings.json"
+
+# Resolved relative to this file so audio works no matter where the game is launched from
+AUDIO_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "assets", "audio")
+MUSIC_FILE = os.path.join(AUDIO_DIR, "music", "syntaxSong.wav")
+
+# Named sound effects -> list of variant files (one is picked at random each play)
+SFX_FILES = {
+    "laser":       ["laser.wav", "laser2.wav", "laser3.wav", "laser4.wav"],
+    "hit":         ["Hit1.wav", "Hit3.wav"],
+    "bugKill":     ["bugKill.wav", "bugKill2.wav"],
+    "corrupt":     ["corrupt1.wav", "corrupt2.wav", "corrupt3.wav", "corrupt4.wav"],
+    "toolBreak":   ["toolBreak.wav", "toolBreak2.wav"],
+    "antivirus":   ["antivirusOnline.wav"],
+    "upgrade":     ["upgrade1.wav"],
+    "select":      ["select.wav"],
+    "back":        ["select2.wav"],
+    "place":       ["select3.wav"],
+}
+
+# Minimum seconds between plays of the same named effect (stops rapid-fire sounds from stacking into noise)
+SFX_COOLDOWN = {
+    "laser": 0.07,
+    "hit": 0.05,
+    "bugKill": 0.06,
+}
+
+# Own RNG for variant picks so sounds never shift the seeded gameplay `random` stream
+_sfxRandom = random.Random()
 
 class AudioManager:
     """Manages audio playback, music volume, and sound effects volume."""
@@ -12,6 +41,7 @@ class AudioManager:
         self.sfxVolume = 0.8     # 0.0 to 1.0 (80%)
         self.isMuted = False
         self._soundCache = {}
+        self._lastPlayed = {}    # named effect -> ticks (ms) when last played
         self.initialized = False
 
         self._initMixer()
@@ -24,6 +54,7 @@ class AudioManager:
             try:
                 # 44.1kHz, 16-bit signed, 2 channels, 512 buffer for low latency
                 pygame.mixer.init(frequency=44100, size=-16, channels=2, buffer=512)
+                pygame.mixer.set_num_channels(32)   # default 8 is too few once towers start firing
                 self.initialized = True
             except Exception as e:
                 print("AudioManager: pygame.mixer.init failed or sound card unavailable:", e)
@@ -125,6 +156,22 @@ class AudioManager:
             sound.play()
         except Exception as e:
             print(f"AudioManager: Could not play SFX '{filePath}':", e)
+
+    def startMusic(self):
+        """Loops the background soundtrack."""
+        self.playMusic(MUSIC_FILE, loop=True)
+
+    def sfx(self, name: str):
+        """Plays a named effect from SFX_FILES (random variant, throttled by SFX_COOLDOWN)."""
+        files = SFX_FILES.get(name)
+        if not files:
+            return
+        now = pygame.time.get_ticks()
+        cooldownMs = SFX_COOLDOWN.get(name, 0.0) * 1000
+        if now - self._lastPlayed.get(name, -1e9) < cooldownMs:
+            return
+        self._lastPlayed[name] = now
+        self.playSfx(os.path.join(AUDIO_DIR, "sfx", _sfxRandom.choice(files)))
 
 
 # Global singleton instance

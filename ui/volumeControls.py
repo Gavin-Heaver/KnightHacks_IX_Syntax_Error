@@ -47,10 +47,12 @@ class VolumeSlider:
             if self.minusRect.collidepoint(mpos):
                 cur = self.getVal()
                 self.setVal(round(max(0.0, cur - 0.1), 2))
+                audioManager.sfx("select")
                 return True
             elif self.plusRect.collidepoint(mpos):
                 cur = self.getVal()
                 self.setVal(round(min(1.0, cur + 0.1), 2))
+                audioManager.sfx("select")
                 return True
             elif self.trackRect.collidepoint(mpos):
                 self.isDragging = True
@@ -60,6 +62,7 @@ class VolumeSlider:
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             if self.isDragging:
                 self.isDragging = False
+                audioManager.sfx("select")   # preview the new level once the drag ends
                 return True
 
         return False
@@ -191,6 +194,7 @@ class VolumeModal:
             mpos = event.pos
             if self.muteBtnRect.collidepoint(mpos):
                 audioManager.toggleMute()
+                audioManager.sfx("select")   # silent when muting, audible when unmuting
                 return None
             elif self.backBtnRect.collidepoint(mpos):
                 return "back"

@@ -4,6 +4,7 @@ import config
 import math
 import random
 from game import events, corruption
+from game.audio import audioManager
 from ai.flowField import nextStep, INF
 from ai.steering import separation, clearPath
 
@@ -51,6 +52,7 @@ class Enemy:
         if self.hp <= 0:
             self.hp = 0
             self.alive = False
+            audioManager.sfx("bugKill")
             events.emit("enemyKilled", self)
         elif self.type == "zeroDay" and self.tpCooldown <= 0:
             self.wantsTP = True
