@@ -37,9 +37,12 @@ class Enemy:
         self.slowFactor = 1.0
 
     def applySlow(self, factor=0.5, duration=1.0):
-        """Temporarily slows the enemy's movement speed."""
+        """Temporarily slows or speeds up the enemy's movement speed."""
         self.slowTimer = max(self.slowTimer, duration)
-        self.slowFactor = min(self.slowFactor, factor)
+        if factor > 1.0:
+            self.slowFactor = max(self.slowFactor, factor)
+        else:
+            self.slowFactor = min(self.slowFactor, factor)
 
     def takeDamage(self, n):
         if not self.alive:
@@ -82,6 +85,7 @@ class Enemy:
                 if self.type == "injection":
                     corruption.corrupt(tower)
                     board.dirty = True
+                    board.hpChanged = True
                     self.alive = False
                 else:
                     sepX, sepY = separation(self, enemies, config.SWARM_SEP_RADIUS)
@@ -201,7 +205,7 @@ class Enemy:
     def _adjacentTower(board, tileX, tileY):
         for nx, ny in board.neighbors(tileX, tileY):
             tool = board.toolAt(nx, ny)
-            if tool is not None and getattr(tool, "programmable", False) and not getattr(tool, "corrupted", False):
+            if tool is not None and tool.kind in ("turret", "debugger") and not getattr(tool, "corrupted", False):
                 return tool
         return None
 

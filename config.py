@@ -46,7 +46,7 @@ APPROACH_RANGE = 10.0
 ATTACK_RANGE = .35
 
 # ---------------------------------------------------------------- economy (bytes)
-START_BYTES = 150
+START_BYTES = 1000
 WAVE_CLEAR_BONUS = 25
 SELL_REFUND = 0.5
 REPAIR_COST_PER_HP = 0.5
