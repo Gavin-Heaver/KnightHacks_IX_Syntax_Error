@@ -7,10 +7,18 @@
 #YOU ARE ADMIRED FOR YOUR ADVENTUROUS SPIRIT~ THANK YOU PANDA EXPRESS x2
 
 #imports
+import os
+import sys
+
+# Project directory
+projectDir = os.path.dirname(os.path.abspath(__file__))
+if os.path.isdir(projectDir):
+    os.chdir(projectDir)
+    if projectDir not in sys.path:
+        sys.path.insert(0, projectDir)
+
 import pygame
 import pygame_gui
-
-import sys                     # settrace (cycles budget)
 import ast                     # script checks (unlocks, blocked imports)
 import heapq                   # Dijkstra
 import math, random, time      # math, random, timing
@@ -42,10 +50,33 @@ from ui.pauseMenu import PauseMenu
 from game.audio import audioManager
 
 #setup
+try:
+    import ctypes
+    # Tells Windows this process has its own identity so the taskbar displays our custom icon instead of python.exe
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("knighthacks.syntaxerror.towerdefense.1.0")
+except Exception:
+    pass
+
 random.seed(config.DEMO_SEED)   # deterministic demo (use only `random` for randomness)
 pygame.init()
+
+# Set window and taskbar icon
+iconPath = os.path.join(projectDir, "assets", "pixil-frame-0-trans.png")
+if not os.path.exists(iconPath):
+    iconPath = os.path.join(projectDir, "assets", "pixil-frame-0.png")
+if os.path.exists(iconPath):
+    try:
+        gameIcon = pygame.image.load(iconPath)
+        pygame.display.set_icon(gameIcon)
+    except Exception as e:
+        print("Failed to set window icon:", e)
+
 screen = pygame.display.set_mode((config.SCREEN_W, config.SCREEN_H), pygame.SCALED)
 pygame.display.set_caption("Syntax Error: Code Tower Defense")
+
+# Re-apply after set_mode to guarantee persistence across all SDL window managers
+if 'gameIcon' in locals():
+    pygame.display.set_icon(gameIcon)
 
 def toggleFullscreen():
     """Toggles fullscreen mode smoothly while maintaining the 1280x720 scaled aspect ratio."""
