@@ -120,6 +120,16 @@ class TowerScript:
         def fire():
             tool.wantsToFire = True
 
+        def slow(targetView=None):
+            if isinstance(targetView, EnemyView):
+                realEnemy = viewToEnemy.get(id(targetView))
+                if realEnemy is not None:
+                    tool.aimTarget = realEnemy
+            tool.wantsToSlow = True
+
+        def patch(targetView=None):
+            slow(targetView)
+
         def customPrint(*args):
             msg = " ".join(str(a) for a in args)
             self.console.append(msg)
@@ -131,6 +141,8 @@ class TowerScript:
             "enemiesInRange": enemiesInRange,
             "aim": aim,
             "fire": fire,
+            "slow": slow,
+            "patch": patch,
             "memory": self.memory,
             "print": customPrint,
         }

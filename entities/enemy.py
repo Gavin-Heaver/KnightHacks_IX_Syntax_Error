@@ -33,6 +33,13 @@ class Enemy:
         self.spotY = cpuCenterY + math.sin(angle) * ringRadius
         self.wantsTP = False
         self.tpCooldown = 0.0
+        self.slowTimer = 0.0
+        self.slowFactor = 1.0
+
+    def applySlow(self, factor=0.5, duration=1.0):
+        """Temporarily slows the enemy's movement speed."""
+        self.slowTimer = max(self.slowTimer, duration)
+        self.slowFactor = min(self.slowFactor, factor)
 
     def takeDamage(self, n):
         if not self.alive:
@@ -48,6 +55,11 @@ class Enemy:
     def update(self, dt, board, dist, enemies):
         if not self.alive:
             return
+
+        if self.slowTimer > 0:
+            self.slowTimer -= dt
+            if self.slowTimer <= 0:
+                self.slowFactor = 1.0
 
         if self.tpCooldown > 0:
             self.tpCooldown -= dt
@@ -129,7 +141,7 @@ class Enemy:
         distance = math.hypot(sepX, sepY)
         if distance > 1:
             sepX, sepY = sepX / distance, sepY / distance
-        push = self.speed * dt * 0.5
+        push = (self.speed * self.slowFactor) * dt * 0.5
         self._tryMove(board, self.x + sepX * push,self.y + sepY * push)
 
     def _tryMove(self, board, newX, newY):
@@ -175,7 +187,7 @@ class Enemy:
         length = math.hypot(dirX, dirY)
         if length == 0:
             return
-        move = self.speed * dt
+        move = (self.speed * self.slowFactor) * dt
         self._tryMove(board, self.x + dirX / length * move, self.y + dirY / length * move)
 
     @staticmethod

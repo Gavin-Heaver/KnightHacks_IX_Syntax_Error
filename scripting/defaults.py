@@ -12,5 +12,6 @@ DEFAULT_DEBUGGER_SCRIPT = """def tick():
     if len(targets) > 0:
         # Debugger reveals enemy types and slows them down
         aim(targets[0])
+        slow()
 """
 

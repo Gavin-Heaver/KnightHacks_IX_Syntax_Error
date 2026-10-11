@@ -90,15 +90,16 @@ class ShopPanel:
             tierStr = f" (T{selectedTool.tier})" if hasattr(selectedTool, "tier") else ""
             self.infoLabel.set_text(f"{selectedTool.kind.upper()}{tierStr}  HP:{int(selectedTool.hp)}/{selectedTool.maxHp}")
             # Check if an upgrade is available
-            if hasattr(selectedTool, "tier") and selectedTool.tier < len(config.TURRET_TIERS) - 1:
-                cost = config.TURRET_TIERS[selectedTool.tier + 1]["upgradeCost"]
+            tiers = config.TOOL_TIERS.get(selectedTool.kind)
+            if tiers and hasattr(selectedTool, "tier") and selectedTool.tier < len(tiers) - 1:
+                cost = tiers[selectedTool.tier + 1]["upgradeCost"]
                 self.btnUpgrade.set_text(f"UPGRADE ({cost} B)")
                 if gameState.canAfford(cost):
                     self.btnUpgrade.enable()
                 else:
                     self.btnUpgrade.disable()
             else:
-                self.btnUpgrade.set_text("MAX TIER" if hasattr(selectedTool, "tier") else "NO UPGRADE")
+                self.btnUpgrade.set_text("MAX TIER" if (tiers and hasattr(selectedTool, "tier")) else "NO UPGRADE")
                 self.btnUpgrade.disable()
 
             # Show refund amount
@@ -186,8 +187,9 @@ class ShopPanel:
 
             #upgrades
             elif event.ui_element == self.btnUpgrade and selectedTool is not None:
-                if hasattr(selectedTool, "tier") and selectedTool.tier < len(config.TURRET_TIERS) - 1:
-                    cost = config.TURRET_TIERS[selectedTool.tier + 1]["upgradeCost"]
+                tiers = config.TOOL_TIERS.get(selectedTool.kind)
+                if tiers and hasattr(selectedTool, "tier") and selectedTool.tier < len(tiers) - 1:
+                    cost = tiers[selectedTool.tier + 1]["upgradeCost"]
                     if gameState.spendBytes(cost):
                         selectedTool.upgrade()
 

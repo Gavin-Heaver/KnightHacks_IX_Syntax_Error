@@ -57,7 +57,7 @@ FIX_CODE_COST = 15
 TOOL_STATS = {
     "turret":   {"cost": 50, "hp": 30,  "range": 5.0, "dps": 8.0},
     "firewall": {"cost": 30, "hp": 120, "range": 0.0, "dps": 0.0},
-    "debugger": {"cost": 70, "hp": 40,  "range": 4.0, "dps": 0.0},
+    "debugger": {"cost": 70, "hp": 40,  "range": 4.0, "dps": 3.5},
 }
 TURRET_TIERS = [
     # cycles per tick, damage per shot, range, shots per second
@@ -65,6 +65,16 @@ TURRET_TIERS = [
     {"cycles": 40, "damage": 6,  "range": 5.5, "fireRate": 2.5, "upgradeCost": 60},
     {"cycles": 80, "damage": 9,  "range": 6.0, "fireRate": 3.0, "upgradeCost": 120},
 ]
+DEBUGGER_TIERS = [
+    # cycles per tick, range, speed multiplier (lower = slower), dps, upgradeCost
+    {"cycles": 30, "range": 4.0, "slowFactor": 0.50, "dps": 3.5, "upgradeCost": 0},
+    {"cycles": 60, "range": 5.0, "slowFactor": 0.35, "dps": 5.0, "upgradeCost": 75},
+    {"cycles": 100, "range": 6.0, "slowFactor": 0.20, "dps": 7.0, "upgradeCost": 130},
+]
+TOOL_TIERS = {
+    "turret": TURRET_TIERS,
+    "debugger": DEBUGGER_TIERS,
+}
 PROJECTILE_SPEED = 12.0          # tiles per second
 FIREWALL_MIN_LEN = 2
 FIREWALL_MAX_LEN = 5

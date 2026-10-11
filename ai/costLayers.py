@@ -7,6 +7,8 @@ def buildFireLayer(board):
     for tool in board.allTools():
         dps = getattr(tool, "damage", 0) * getattr(tool, "fireRate", 0)
         if dps <= 0:
+            dps = getattr(tool, "dps", 0)
+        if dps <= 0:
             continue
 
         r = tool.range
