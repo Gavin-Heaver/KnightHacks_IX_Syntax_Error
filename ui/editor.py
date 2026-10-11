@@ -42,7 +42,13 @@ class CodeEditor:
 
         self.codeBox.set_text(tool.script.sourceCode)
 
-        self.titleLabel.set_text(f"{tool.kind.upper()} COMPILER (Tier: {tool.tier})")
+        if getattr(tool, "corrupted", False):
+            self.titleLabel.set_text(f"{tool.kind.upper()} COMPILER [INFECTED!]")
+            errorMsg = tool.script.error or "Injected malware detected."
+            self.consoleBox.set_text(f"<font color='#FF4646'><b>MALWARE INFECTION DETECTED:</b></font><br>{errorMsg}")
+        else:
+            self.titleLabel.set_text(f"{tool.kind.upper()} COMPILER (Tier: {tool.tier})")
+            self.consoleBox.set_text("Console ready...")
 
         self.panel.show()
         
@@ -51,7 +57,7 @@ class CodeEditor:
         self.currentTool = None
         self.panel.hide()
 
-    def compileCode(self, unlockedConcepts=None):
+    def compileCode(self, unlockedConcepts=None, board=None):
         if self.currentTool is None:
             return
         
@@ -60,16 +66,23 @@ class CodeEditor:
         success = self.currentTool.script.compile(unlockedConcepts=unlockedConcepts)
 
         if success:
-            self.consoleBox.set_text("<font color='#46C878'><b>Compile Successful!</b></font><br>Tower logic updated.")
+            if getattr(self.currentTool, "corrupted", False):
+                self.currentTool.corrupted = False
+                if board is not None:
+                    board.dirty = True
+                self.titleLabel.set_text(f"{self.currentTool.kind.upper()} COMPILER (Tier: {self.currentTool.tier})")
+                self.consoleBox.set_text("<font color='#46C878'><b>Malware Purged!</b></font><br>Tower restored to friendly operation.")
+            else:
+                self.consoleBox.set_text("<font color='#46C878'><b>Compile Successful!</b></font><br>Tower logic updated.")
         
         else:
             errorMsg = self.currentTool.script.error
-            
             self.consoleBox.set_text(f"<font color='#FF4646'><b>Compile Error:</b></font><br>{errorMsg}")
-    def handleEvent(self, event, unlockedConcepts=None):
+
+    def handleEvent(self, event, unlockedConcepts=None, board=None):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             if event.ui_element == self.compileBtn:
-                self.compileCode(unlockedConcepts=unlockedConcepts)
+                self.compileCode(unlockedConcepts=unlockedConcepts, board=board)
                 
             elif event.ui_element == self.closeBtn:
                 self.close()

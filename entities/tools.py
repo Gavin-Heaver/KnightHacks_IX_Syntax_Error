@@ -22,6 +22,7 @@ class DefenseTool:
         self.range = stats["range"]
         self.dps = stats["dps"]
         self.spent = stats["cost"]       # total bytes spent (sell refund = 50%)
+        self.corrupted = False
 
     def takeDamage(self, n):
         if self.hp <= 0:
@@ -89,11 +90,11 @@ class Turret(DefenseTool):
             return True
         return False
 
-    def update(self, dt, allEnemies, newProjectilesList, unlockedConcepts=None):
+    def update(self, dt, allEnemies, newProjectilesList, unlockedConcepts=None, board=None):
         """
         Runs every frame:
         1. Manages fire cooldown and laser timers.
-        2. Ticks the Python script ~8 times a second.
+        2. Ticks the Python script ~8 times a second (or executes corrupted attacks if hacked).
         3. Spawns bullets (Tier 1/2) or fires continuous laser (Tier 3).
         """
         if self.fireCooldown > 0:
@@ -103,6 +104,47 @@ class Turret(DefenseTool):
             self.laserDuration -= dt
             if self.laserDuration <= 0:
                 self.laserTarget = None
+
+        if getattr(self, "corrupted", False):
+            # Corrupted turret attacks friendly tools at half strength within range
+            if board is not None:
+                cx, cy = self.x + 0.5, self.y + 0.5
+                candidateTools = [
+                    t for t in board.allTools()
+                    if t != self and getattr(t, "hp", 0) > 0 and math.hypot((t.x + 0.5) - cx, (t.y + 0.5) - cy) <= self.range
+                ]
+                candidateTools.sort(key=lambda t: math.hypot((t.x + 0.5) - cx, (t.y + 0.5) - cy))
+
+                if self.tier == 2:
+                    # Tier 3 (Laser): Constant laser beam dealing continuous half damage to friendly tool
+                    if candidateTools:
+                        targetTool = candidateTools[0]
+                        laserDps = (self.damage * 0.5) * self.fireRate
+                        targetTool.takeDamage(laserDps * dt)
+                        board.hpChanged = True
+                        self.laserTarget = targetTool
+                        self.laserDuration = 0.1
+                    else:
+                        self.laserTarget = None
+                else:
+                    # Tier 1 & Tier 2: Projectiles (Tier 2 has homing) fired at friendly tools at half damage
+                    if self.fireCooldown <= 0 and candidateTools:
+                        targetTool = candidateTools[0]
+                        homing = targetTool if self.tier == 1 else None
+                        bullet = Projectile(
+                            startX=cx,
+                            startY=cy,
+                            targetX=targetTool.x + 0.5,
+                            targetY=targetTool.y + 0.5,
+                            damage=self.damage * 0.5,
+                            speed=config.PROJECTILE_SPEED,
+                            maxRange=self.range,
+                            homingTarget=homing,
+                            targetTool=targetTool
+                        )
+                        newProjectilesList.append(bullet)
+                        self.fireCooldown = 1.0 / self.fireRate
+            return
 
         # Update script timer:
         self.scriptTimer += dt
@@ -147,6 +189,7 @@ class Turret(DefenseTool):
                     self.fireCooldown = 1.0 / self.fireRate
                 self.wantsToFire = False
 
+
 class Firewall(DefenseTool):
     """Heavy defensive wall that connects plasma barriers."""
     programmable = False
@@ -172,7 +215,7 @@ class Firewall(DefenseTool):
             return True
         return False
 
-    def update(self, dt, allEnemies, newProjectilesList, unlockedConcepts=None):
+    def update(self, dt, allEnemies, newProjectilesList, unlockedConcepts=None, board=None):
         pass
 
 class Debugger(DefenseTool):
@@ -212,9 +255,50 @@ class Debugger(DefenseTool):
             return True
         return False
 
-    def update(self, dt, allEnemies, newProjectilesList, unlockedConcepts=None):
+    def update(self, dt, allEnemies, newProjectilesList, unlockedConcepts=None, board=None):
         # 1. Update radar sweep angle
         self.scanAngle = (self.scanAngle + 3.0 * dt) % (2 * math.pi)
+
+        cx, cy = self.x + 0.5, self.y + 0.5
+
+        if getattr(self, "corrupted", False):
+            # Corrupted Debugger:
+            # - Does NO damage to bugs.
+            # - Deals small damage (20% of tier dps) to friendly tools in range.
+            # - Reverses slowdown on bugs inside its sphere (speeds them up at the same rate).
+            if board is not None and self.dps > 0:
+                corruptedDps = self.dps * 0.20
+                for t in board.allTools():
+                    if t != self and getattr(t, "hp", 0) > 0:
+                        if math.hypot((t.x + 0.5) - cx, (t.y + 0.5) - cy) <= self.range:
+                            t.takeDamage(corruptedDps * dt)
+                            board.hpChanged = True
+
+            revPassive = (1.0 + (1.0 - self.passiveSlow)) if self.passiveSlow < 1.0 else 1.0
+            revTarget = (1.0 + (1.0 - self.slowFactor)) if self.slowFactor < 1.0 else 1.0
+
+            closestEnemy = None
+            closestDist = 999.0
+
+            for enemy in allEnemies:
+                if getattr(enemy, "alive", True):
+                    dist = math.hypot(enemy.x - cx, enemy.y - cy)
+                    if dist <= self.range:
+                        enemy.revealed = True
+                        if revPassive > 1.0:
+                            enemy.applySlow(factor=revPassive, duration=0.2)
+                        if dist < closestDist:
+                            closestDist = dist
+                            closestEnemy = enemy
+
+            if closestEnemy is not None:
+                self.aimTarget = closestEnemy
+                if revTarget > 1.0:
+                    self.aimTarget.applySlow(factor=revTarget, duration=0.35)
+            else:
+                self.aimTarget = None
+            self.wantsToSlow = False
+            return
 
         # 2. Run Python script ~8x/sec
         self.scriptTimer += dt
@@ -224,7 +308,6 @@ class Debugger(DefenseTool):
             self.script.runTick(self, allEnemies, self.cycleBudget, unlockedConcepts)
 
         # 3. Support Aura: reveal all enemies within scanner range, deal passive damage, and slow (if unlocked)
-        cx, cy = self.x + 0.5, self.y + 0.5
         for enemy in allEnemies:
             if getattr(enemy, "alive", True):
                 dist = math.hypot(enemy.x - cx, enemy.y - cy)
@@ -245,4 +328,4 @@ class Debugger(DefenseTool):
                     self.aimTarget.applySlow(factor=self.slowFactor, duration=0.35)
             else:
                 self.aimTarget = None
-        self.wantsToSlow = False
+        self.wantsToSlow = False

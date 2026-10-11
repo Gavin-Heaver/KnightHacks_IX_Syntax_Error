@@ -4,7 +4,7 @@ import config
 
 
 class Projectile:
-    def __init__(self, startX, startY, targetX, targetY, damage, speed=config.PROJECTILE_SPEED, maxRange=6.0, homingTarget=None):
+    def __init__(self, startX, startY, targetX, targetY, damage, speed=config.PROJECTILE_SPEED, maxRange=6.0, homingTarget=None, targetTool=None):
         self.x = float(startX)
         self.y = float(startY)
         self.damage = float(damage)
@@ -14,6 +14,7 @@ class Projectile:
         self.alive = True
         self.hitRadius = 0.1    # tile distance to register a hit
         self.homingTarget = homingTarget
+        self.targetTool = targetTool
 
         # Calculate normalized straight-line velocity vector
         dx = targetX - startX
@@ -31,14 +32,18 @@ class Projectile:
         if not self.alive:
             return
 
-        # Homing velocity adjustment toward locked bug
-        if self.homingTarget is not None and getattr(self.homingTarget, "alive", True):
-            dx = self.homingTarget.x - self.x
-            dy = self.homingTarget.y - self.y
-            dist = math.hypot(dx, dy)
-            if dist > 0.01:
-                self.vx = (dx / dist) * self.speed
-                self.vy = (dy / dist) * self.speed
+        # Homing velocity adjustment toward locked bug or tool
+        if self.homingTarget is not None:
+            isTargetAlive = getattr(self.homingTarget, "alive", True) if hasattr(self.homingTarget, "alive") else (getattr(self.homingTarget, "hp", 1) > 0)
+            if isTargetAlive:
+                targetX = (self.homingTarget.x + 0.5) if hasattr(self.homingTarget, "kind") else self.homingTarget.x
+                targetY = (self.homingTarget.y + 0.5) if hasattr(self.homingTarget, "kind") else self.homingTarget.y
+                dx = targetX - self.x
+                dy = targetY - self.y
+                dist = math.hypot(dx, dy)
+                if dist > 0.01:
+                    self.vx = (dx / dist) * self.speed
+                    self.vy = (dy / dist) * self.speed
 
         stepX = self.vx * dt
         stepY = self.vy * dt
@@ -59,6 +64,20 @@ class Projectile:
 
         if board and board.isCpu(math.floor(self.x), math.floor(self.y)):
             self.alive = False
+            return
+
+        # Check collision against friendly tools if projectile was fired by corrupted tool
+        if self.targetTool is not None:
+            if board:
+                for tool in board.allTools():
+                    if getattr(tool, "hp", 0) <= 0:
+                        continue
+                    d = math.hypot(self.x - (tool.x + 0.5), self.y - (tool.y + 0.5))
+                    if d <= 0.45:
+                        tool.takeDamage(self.damage)
+                        board.hpChanged = True
+                        self.alive = False
+                        break
             return
 
         # Check collision against enemies

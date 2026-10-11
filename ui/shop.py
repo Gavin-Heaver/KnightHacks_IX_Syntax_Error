@@ -87,8 +87,9 @@ class ShopPanel:
         self.statusLabel.set_text(f"Equipped: {self.selectedToolType.upper()}")
 
         if selectedTool is not None:
+            corruptStr = " [INFECTED!]" if getattr(selectedTool, "corrupted", False) else ""
             tierStr = f" (T{selectedTool.tier})" if hasattr(selectedTool, "tier") else ""
-            self.infoLabel.set_text(f"{selectedTool.kind.upper()}{tierStr}  HP:{int(selectedTool.hp)}/{selectedTool.maxHp}")
+            self.infoLabel.set_text(f"{selectedTool.kind.upper()}{tierStr}{corruptStr}  HP:{int(selectedTool.hp)}/{selectedTool.maxHp}")
             # Check if an upgrade is available
             tiers = config.TOOL_TIERS.get(selectedTool.kind)
             if tiers and hasattr(selectedTool, "tier") and selectedTool.tier < len(tiers) - 1:
@@ -122,7 +123,10 @@ class ShopPanel:
 
             # Dynamic compiler button
             if getattr(selectedTool, "programmable", False):
-                self.btnCompiler.set_text("COMPILER")
+                if getattr(selectedTool, "corrupted", False):
+                    self.btnCompiler.set_text("DEBUG/FIX!")
+                else:
+                    self.btnCompiler.set_text("COMPILER")
                 self.btnCompiler.enable()
             else:
                 self.btnCompiler.set_text("NO SCRIPT")

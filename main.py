@@ -198,19 +198,35 @@ def drawBoard():
 
     for tool in board.allTools():
         color = config.TOOL_COLORS.get(tool.kind, config.COLOR_TOOL)
-        pygame.draw.rect(screen, color, tileRect(tool.x, tool.y).inflate(-4, -4))
+        tRect = tileRect(tool.x, tool.y).inflate(-4, -4)
+        pygame.draw.rect(screen, color, tRect)
+
+        isCorrupted = getattr(tool, "corrupted", False)
+        if isCorrupted:
+            # Red outline
+            pygame.draw.rect(screen, (255, 30, 30), tRect, width=2)
+            # Red cross 'X'
+            m = 5
+            pygame.draw.line(screen, (255, 40, 40), (tRect.left + m, tRect.top + m), (tRect.right - m, tRect.bottom - m), 2)
+            pygame.draw.line(screen, (255, 40, 40), (tRect.left + m, tRect.bottom - m), (tRect.right - m, tRect.top + m), 2)
 
         # Tier 3 Turret constant laser beam
         if tool.kind == "turret" and getattr(tool, "tier", 0) >= 2:
             lt = getattr(tool, "laserTarget", None)
-            if lt is not None and getattr(lt, "alive", True):
+            isLtAlive = getattr(lt, "alive", True) if hasattr(lt, "alive") else (getattr(lt, "hp", 1) > 0)
+            if lt is not None and isLtAlive:
                 tcx = int(config.BOARD_X + (tool.x + 0.5) * config.TILE)
                 tcy = int(config.BOARD_Y + (tool.y + 0.5) * config.TILE)
-                tx = int(config.BOARD_X + lt.x * config.TILE)
-                ty = int(config.BOARD_Y + lt.y * config.TILE)
-                pygame.draw.line(screen, (70, 170, 255), (tcx, tcy), (tx, ty), 5)
-                pygame.draw.line(screen, (220, 250, 255), (tcx, tcy), (tx, ty), 2)
-                pygame.draw.circle(screen, (255, 255, 255), (tx, ty), 4)
+                tx = int(config.BOARD_X + ((lt.x + 0.5) if hasattr(lt, "kind") else lt.x) * config.TILE)
+                ty = int(config.BOARD_Y + ((lt.y + 0.5) if hasattr(lt, "kind") else lt.y) * config.TILE)
+                if isCorrupted:
+                    pygame.draw.line(screen, (255, 40, 40), (tcx, tcy), (tx, ty), 5)
+                    pygame.draw.line(screen, (255, 200, 200), (tcx, tcy), (tx, ty), 2)
+                    pygame.draw.circle(screen, (255, 220, 220), (tx, ty), 4)
+                else:
+                    pygame.draw.line(screen, (70, 170, 255), (tcx, tcy), (tx, ty), 5)
+                    pygame.draw.line(screen, (220, 250, 255), (tcx, tcy), (tx, ty), 2)
+                    pygame.draw.circle(screen, (255, 255, 255), (tx, ty), 4)
 
         # Debugger radar ring, rotating scan sweep, and cyber tether
         if tool.kind == "debugger":
@@ -220,22 +236,39 @@ def drawBoard():
 
             # Glowing transparent sphere of influence
             auraSurf = pygame.Surface((dr * 2, dr * 2), pygame.SRCALPHA)
-            pygame.draw.circle(auraSurf, (150, 60, 220, 22), (dr, dr), dr)
-            screen.blit(auraSurf, (dcx - dr, dcy - dr))
+            if isCorrupted:
+                pygame.draw.circle(auraSurf, (220, 30, 30, 26), (dr, dr), dr)
+                screen.blit(auraSurf, (dcx - dr, dcy - dr))
+                pygame.draw.circle(screen, (240, 60, 60), (dcx, dcy), dr, width=1)
+                angle = getattr(tool, "scanAngle", 0.0)
+                swX = dcx + int(math.cos(angle) * dr)
+                swY = dcy + int(math.sin(angle) * dr)
+                pygame.draw.line(screen, (255, 90, 90), (dcx, dcy), (swX, swY), 1)
 
-            pygame.draw.circle(screen, (160, 80, 240), (dcx, dcy), dr, width=1)
-            angle = getattr(tool, "scanAngle", 0.0)
-            swX = dcx + int(math.cos(angle) * dr)
-            swY = dcy + int(math.sin(angle) * dr)
-            pygame.draw.line(screen, (200, 120, 255), (dcx, dcy), (swX, swY), 1)
+                # Active red tether beam to aimTarget
+                target = getattr(tool, "aimTarget", None)
+                if target is not None and getattr(target, "alive", True):
+                    tx = int(config.BOARD_X + target.x * config.TILE)
+                    ty = int(config.BOARD_Y + target.y * config.TILE)
+                    pygame.draw.line(screen, (255, 70, 70), (dcx, dcy), (tx, ty), 2)
+                    pygame.draw.circle(screen, (255, 180, 180), ((dcx + tx) // 2, (dcy + ty) // 2), 3)
+            else:
+                pygame.draw.circle(auraSurf, (150, 60, 220, 22), (dr, dr), dr)
+                screen.blit(auraSurf, (dcx - dr, dcy - dr))
+                pygame.draw.circle(screen, (160, 80, 240), (dcx, dcy), dr, width=1)
+                angle = getattr(tool, "scanAngle", 0.0)
+                swX = dcx + int(math.cos(angle) * dr)
+                swY = dcy + int(math.sin(angle) * dr)
+                pygame.draw.line(screen, (200, 120, 255), (dcx, dcy), (swX, swY), 1)
 
-            # Active tether beam to aimTarget (if slow is unlocked)
-            target = getattr(tool, "aimTarget", None)
-            if target is not None and getattr(target, "alive", True) and getattr(tool, "slowFactor", 1.0) < 1.0:
-                tx = int(config.BOARD_X + target.x * config.TILE)
-                ty = int(config.BOARD_Y + target.y * config.TILE)
-                pygame.draw.line(screen, (220, 130, 255), (dcx, dcy), (tx, ty), 2)
-                pygame.draw.circle(screen, (255, 210, 255), ((dcx + tx) // 2, (dcy + ty) // 2), 3)
+                # Active tether beam to aimTarget (if slow is unlocked)
+                target = getattr(tool, "aimTarget", None)
+                if target is not None and getattr(target, "alive", True) and getattr(tool, "slowFactor", 1.0) < 1.0:
+                    tx = int(config.BOARD_X + target.x * config.TILE)
+                    ty = int(config.BOARD_Y + target.y * config.TILE)
+                    pygame.draw.line(screen, (220, 130, 255), (dcx, dcy), (tx, ty), 2)
+                    pygame.draw.circle(screen, (255, 210, 255), ((dcx + tx) // 2, (dcy + ty) // 2), 3)
+
 
         # Floating mini-health bar on damaged tools/walls
         if hasattr(tool, "hp") and hasattr(tool, "maxHp") and tool.hp < tool.maxHp:
@@ -314,7 +347,11 @@ def drawBoard():
     for p in projectiles:
         px = config.BOARD_X + p.x * config.TILE
         py = config.BOARD_Y + p.y * config.TILE
-        if getattr(p, "homingTarget", None) is not None:
+        if getattr(p, "targetTool", None) is not None:
+            # Corrupted hostile projectile
+            pygame.draw.circle(screen, (255, 60, 60), (int(px), int(py)), 4)
+            pygame.draw.circle(screen, (255, 180, 180), (int(px), int(py)), 2)
+        elif getattr(p, "homingTarget", None) is not None:
             # Gold/cyan glowing homing seeker projectile
             pygame.draw.circle(screen, (255, 215, 60), (int(px), int(py)), 4)
             pygame.draw.circle(screen, (255, 255, 220), (int(px), int(py)), 2)
@@ -380,7 +417,7 @@ while running:
 
         # ---- in game: UI first (Gavin's editor + shop)
         uiManager.process_events(event)
-        codeEditor.handleEvent(event, gameState.unlockedConcepts)
+        codeEditor.handleEvent(event, gameState.unlockedConcepts, board=board)
 
         if not codeEditor.isOpen:
             shopPanel.panel.show()
@@ -406,7 +443,7 @@ while running:
                 valid = [t for t in edges if board.isBuildable(*t)]
                 if valid:
                     x, y = random.choice(valid)
-                    enemies.append(Enemy("zeroDay", x + 0.5, y + 0.5))
+                    enemies.append(Enemy("injection", x + 0.5, y + 0.5))
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_F1:
                 debugOverlay.cycleMode()
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_F2:
@@ -461,7 +498,7 @@ while running:
             uiManager.update(dt)
             for tool in board.allTools():
                 if hasattr(tool, "update"):
-                    tool.update(dt, enemies, projectiles, gameState.unlockedConcepts)
+                    tool.update(dt, enemies, projectiles, gameState.unlockedConcepts, board=board)
 
             # AI tick: pheromones fade + spread every AI_TICK_SECONDS
             aiTimer += dt
