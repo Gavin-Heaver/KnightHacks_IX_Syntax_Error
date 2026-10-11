@@ -606,7 +606,7 @@ while running:
 
         debugOverlay.draw(screen, board, fields, pheromones.grid)
 
-        hud.draw(screen, gameState)
+        hud.draw(screen, gameState, enemies)
 
         # wave banner: "PRESS ENTER TO BEGIN" before wave 1, countdown between waves
         if phase == config.PHASE_BUILD:

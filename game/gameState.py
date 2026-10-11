@@ -13,6 +13,7 @@ class GameState:
         self.unlockedConcepts = {"if", "for", "while", "memory"}
         self.bugsKilled = 0
         self.totalBytesEarned = config.START_BYTES
+        self.encounteredEnemies = {"bug"}
 
         events.subscribe("enemyKilled", self.onEnemyKilled)
         events.subscribe("cpuHit", self.onCpuHit)
