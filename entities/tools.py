@@ -32,7 +32,6 @@ class DefenseTool:
             events.emit("toolDestroyed", self)
 
     def corrupt(self):
-        """Called by Injection on contact. Overridden by programmable tools."""
         pass
 
 

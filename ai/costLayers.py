@@ -23,8 +23,10 @@ def buildFireLayer(board):
 
     return fire
 
-def makeCost(board, enemyType, fire, fear):
+def makeCost(board, enemyType, fire, fear, fireWeight = None):
     w = config.AI_WEIGHTS[enemyType]
+    if fireWeight is None:
+        fireWeight = w["fire"]
 
     def cost(x, y):
         if board.isCpu(x, y):
@@ -38,24 +40,29 @@ def makeCost(board, enemyType, fire, fear):
         c = 1.0
         if tool is not None:
             c += w["wall"] * tool.hp / config.BUG_DPS
-        c += w["fire"] * fire[y][x]
+        c += fireWeight * fire[y][x]
         c += w["fear"] * fear[y][x]
         return c
 
     return cost
-        
+
+
+def toolTargetTiles(board):
+    targets = set()
+    for tool in board.allTools():
+        if not getattr(tool, "programmable", False) or getattr(tool, "corrupted", False):
+            continue
+        for nx, ny in board.neighbors(tool.x, tool.y):
+            if board.isBuildable(nx, ny):
+                targets.add((nx, ny))
+    return list(targets)
 
 def buildFields(board, fear):
     fire = buildFireLayer(board)
-    fields = {}
+    towerGoals = toolTargetTiles(board) or board.cpuTiles
+    fields = {"cpu": {}, "tower": {}}
     for enemyType in config.AI_WEIGHTS:
-        fields[enemyType] = buildField(board, board.cpuTiles, makeCost(board, enemyType, fire, fear))
-
-    return fields
-
-def buildFields(board, fear):
-    fire = buildFireLayer(board)
-    fields = {}
-    for enemyType in config.AI_WEIGHTS:
-        fields[enemyType] = buildField(board, board.cpuTiles, makeCost(board, enemyType, fire, fear))
+        fields["cpu"][enemyType] = buildField(board, board.cpuTiles, makeCost(board, enemyType, fire, fear))
+        if config.TOWER_TARGET_CHANCE.get(enemyType, 0) > 0:
+            fields["tower"][enemyType] = buildField(board, towerGoals, makeCost(board, enemyType, fire, fear, fireWeight = 0.0))
     return fields
