@@ -121,7 +121,6 @@ def resetGame():
     fields = buildFields(board, pheromones.grid)
     paused = False
     phase = config.PHASE_MENU
-    events.clearAll()
     events.subscribe("toolDestroyed", onToolDestroyed)
     events.subscribe("enemyKilled", onEnemyKilled)
 
@@ -241,7 +240,7 @@ while running:
             edges = [(x, y) for x in range(board.width) for y in (0, board.height - 1)] + \
                     [(x, y) for y in range(board.height) for x in (0, board.width - 1)]
             x, y = random.choice([t for t in edges if board.isBuildable(*t)])
-            enemies.append(Enemy("memoryLeak", x + 0.5, y + 0.5))
+            enemies.append(Enemy("zeroDay", x + 0.5, y + 0.5))
         ###DEBUG
 
         # F1 cycles the AI overlay: off -> flow arrows -> fear heatmap -> off
