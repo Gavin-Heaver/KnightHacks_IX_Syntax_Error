@@ -15,7 +15,7 @@ class HUD:
         pygame.draw.line(screen, (40, 60, 85), (0, barHeight), (config.SCREEN_W, barHeight), 2)
 
         #Byte Tracking
-        bytesText = f"BYTES: {gameState.bytes}"
+        bytesText = f"BYTES (B): {gameState.bytes}"
         bytesSurf = self.font.render(bytesText, True, (255, 200, 80))
         screen.blit(bytesSurf, (24, 12))
 
