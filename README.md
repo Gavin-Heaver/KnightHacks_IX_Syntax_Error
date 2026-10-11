@@ -15,6 +15,27 @@
 
 ---
 
+## Getting Started
+
+### 1. Clone the Repository
+```bash
+git clone https://github.com/GavinHeaver/KnightHacks_IX_Syntax_Error.git
+cd KnightHacks_IX_Syntax_Error
+```
+
+### 2. Install Dependencies
+```bash
+# Make sure standard pygame is removed to avoid namespace conflicts
+pip uninstall -y pygame
+pip install -r requirements.txt
+```
+
+### 3. Run the Game
+```bash
+python main.py
+```
+---
+
 ## Overview
 
 **Syntax Error: Code Tower Defense** is an algorithmic, cyber tower defense game where defense meets computer science. Players protect a central CPU on an interactive circuit-board grid from escalating waves of malicious bugs, zero-day exploits, and code injections. 
@@ -113,28 +134,6 @@ The codebase adheres strictly to clean **Object-Oriented Programming (OOP)** and
 * **Game Engine**: `pygame-ce` (Community Edition)
 * **UI Toolkit**: `pygame_gui`
 * **Standard Library**: `ast`, `sys`, `heapq`, `math`, `random`, `json`, `dataclasses`, `collections`
-
----
-
-## Getting Started
-
-### 1. Clone the Repository
-```bash
-git clone https://github.com/GavinHeaver/KnightHacks_IX_Syntax_Error.git
-cd KnightHacks_IX_Syntax_Error
-```
-
-### 2. Install Dependencies
-```bash
-# Make sure standard pygame is removed to avoid namespace conflicts
-pip uninstall -y pygame
-pip install -r requirements.txt
-```
-
-### 3. Run the Game
-```bash
-python main.py
-```
 
 ---
 
