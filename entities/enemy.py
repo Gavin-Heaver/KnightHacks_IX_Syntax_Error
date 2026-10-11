@@ -30,6 +30,8 @@ class Enemy:
         ringRadius = max(config.CPU_W, config.CPU_H) / 2 + 0.6   # just outside the CPU
         self.spotX = cpuCenterX + math.cos(angle) * ringRadius
         self.spotY = cpuCenterY + math.sin(angle) * ringRadius
+        self.wantsTP = False
+        self.tpCooldown = 0.0
 
     def takeDamage(self, n):
         if not self.alive:
@@ -39,9 +41,19 @@ class Enemy:
             self.hp = 0
             self.alive = False
             events.emit("enemyKilled", self)
+        elif self.type == "zeroDay" and self.tpCooldown <= 0:
+            self.wantsTP = True
 
     def update(self, dt, board, dist, enemies):
         if not self.alive:
+            return
+
+        if self.tpCooldown > 0:
+            self.tpCooldown -= dt
+        if self.wantsTP:
+            self.wantsTP = False
+            self.tpCooldown = config.ZERODAY_TP_COOLDOWN
+            self._teleport(board, dist)
             return
 
         #finding which tile subject is positioned
@@ -105,6 +117,32 @@ class Enemy:
             self.x = newX
         if self._walkable(board, self.x, newY):
             self.y = newY
+
+    def _teleport(self, board, dist):
+        r = int(config.ZERODAY_TELEPORT_DISTANCE)
+        cx, cy = math.floor(self.x), math.floor(self.y)
+        here = dist[cy][cx]
+
+        forward, anywhere = [], []
+        for dy in range(-r, r + 1):
+            for dx in range(-r, r + 1):
+                if dx * dx + dy * dy > r * r:           # stay inside the circle
+                    continue
+                tx, ty = cx + dx, cy + dy
+                if not self._walkable(board, tx + 0.5, ty + 0.5):
+                    continue
+                if dist[ty][tx] == float("inf"):
+                    continue
+                anywhere.append((tx, ty))
+                if dist[ty][tx] < here:                 # closer to the CPU than where it is now
+                    forward.append((tx, ty))
+
+        options = forward or anywhere                   # prefer forward; fall back to any open tile
+        if not options:
+            return
+        tx, ty = random.choice(options)
+        self.x = tx + 0.5 + random.uniform(-0.3, 0.3)
+        self.y = ty + 0.5 + random.uniform(-0.3, 0.3)
 
     def _steerToward(self, board, targetX, targetY, sepX, sepY, sepWeight,dt):
         """Walk toward (targetX, targetY), blended with separation."""

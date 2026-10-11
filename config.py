@@ -74,15 +74,20 @@ FIREWALL_MAX_LEN = 5
 ENEMY_STATS = {
     "bug":        {"hp": 20,  "speed": 1.6, "reward": 5,  "dps": 4.0, "size": .30},
     "memoryLeak": {"hp": 120, "speed": 0.8, "reward": 20, "dps": 6.0, "size": .75},
-    "zeroDay":    {"hp": 40,  "speed": 1.4, "reward": 15, "dps": 5.0, "size": .35},
-    "injection":  {"hp": 10,  "speed": 2.8, "reward": 10, "dps": 0.0, "size": .20},
+    "zeroDay":    {"hp": 10,  "speed": 1.4, "reward": 15, "dps": 3.0, "size": .20},
+    "injection":  {"hp": 10,  "speed": 2.8, "reward": 10, "dps": 0.0, "size": .35},
 }
 
 SPEED_VARIANCE = 0.15
 SIZE_VARIANCE = 0.15
+
 MEMORY_LEAK_SPLIT_COUNT = 3.0
 ML_SPLIT_VARIANCE = 1.5
+
 BUG_DPS = ENEMY_STATS["bug"]["dps"]   # used by L_wall = tool.hp / BUG_DPS
+
+ZERODAY_TELEPORT_DISTANCE = 5.0 #measured in grids
+ZERODAY_TP_COOLDOWN = 2.0 #in seconds
 
 # ---------------------------------------------------------------- AI: cost weights
 # order of weights per enemy type: wall, fire, fear, crowd
