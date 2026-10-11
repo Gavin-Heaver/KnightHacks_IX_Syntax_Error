@@ -66,3 +66,52 @@ class Board:
             self.tools[y][x] = None
             self.dirty = True
         return tool
+
+    # ------------------------------------------------------------ plasma walls
+    def _calcPlasma(self):
+        links = []
+        tiles = set()
+        firewalls = [t for t in self.allTools() if getattr(t, "kind", "") == "firewall"]
+        firewalls.sort(key=lambda f: (f.x, f.y))
+
+        for i in range(len(firewalls)):
+            f1 = firewalls[i]
+            for j in range(i + 1, len(firewalls)):
+                f2 = firewalls[j]
+
+                # Same X (vertical plasma wall)
+                if f1.x == f2.x:
+                    dy = abs(f1.y - f2.y)
+                    if 1 < dy <= config.FIREWALL_MAX_LEN:
+                        minY, maxY = min(f1.y, f2.y), max(f1.y, f2.y)
+                        intermediate = [(f1.x, y) for y in range(minY + 1, maxY)]
+                        if all(self.tools[y][f1.x] is None and not self.isCpu(f1.x, y) for _, y in intermediate):
+                            links.append(((f1.x, f1.y), (f2.x, f2.y)))
+                            tiles.update(intermediate)
+
+                # Same Y (horizontal plasma wall)
+                elif f1.y == f2.y:
+                    dx = abs(f1.x - f2.x)
+                    if 1 < dx <= config.FIREWALL_MAX_LEN:
+                        minX, maxX = min(f1.x, f2.x), max(f1.x, f2.x)
+                        intermediate = [(x, f1.y) for x in range(minX + 1, maxX)]
+                        if all(self.tools[f1.y][x] is None and not self.isCpu(x, f1.y) for x, _ in intermediate):
+                            links.append(((f1.x, f1.y), (f2.x, f2.y)))
+                            tiles.update(intermediate)
+
+        return links, tiles
+
+    def getPlasma(self):
+        if self.dirty or not hasattr(self, "_cachedPlasmaLinks"):
+            self._cachedPlasmaLinks, self._cachedPlasmaTiles = self._calcPlasma()
+        return self._cachedPlasmaLinks, self._cachedPlasmaTiles
+
+    @property
+    def plasmaTiles(self):
+        _, tiles = self.getPlasma()
+        return tiles
+
+    @property
+    def plasmaLinks(self):
+        links, _ = self.getPlasma()
+        return links

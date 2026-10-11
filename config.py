@@ -147,3 +147,15 @@ TOOL_COLORS = {
     "firewall": COLOR_FIREWALL,
     "debugger": COLOR_DEBUGGER,
 }
+
+COLOR_BUG = (255, 80, 80)           # Classic Bug: Red
+COLOR_MEMORY_LEAK = (60, 220, 160)  # Memory Leak: Slime Green / Teal (big tank)
+COLOR_ZERO_DAY = (255, 215, 60)     # Zero Day: Warning Gold / Yellow
+COLOR_INJECTION = (255, 60, 200)    # Injection: Neon Pink / Magenta
+
+ENEMY_COLORS = {
+    "bug": COLOR_BUG,
+    "memoryLeak": COLOR_MEMORY_LEAK,
+    "zeroDay": COLOR_ZERO_DAY,
+    "injection": COLOR_INJECTION,
+}

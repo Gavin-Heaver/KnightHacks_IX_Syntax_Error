@@ -166,14 +166,95 @@ def drawBoard():
             pygame.draw.rect(screen, config.COLOR_GRID, tileRect(x, y), 1)
     for (x, y) in board.cpuTiles:
         pygame.draw.rect(screen, config.COLOR_CPU, tileRect(x, y).inflate(-2, -2))
+
+    # Firewall plasma links between aligned posts within range
+    for link in board.plasmaLinks:
+        (x1, y1), (x2, y2) = link[0], link[1]
+        p1 = (int(config.BOARD_X + (x1 + 0.5) * config.TILE), int(config.BOARD_Y + (y1 + 0.5) * config.TILE))
+        p2 = (int(config.BOARD_X + (x2 + 0.5) * config.TILE), int(config.BOARD_Y + (y2 + 0.5) * config.TILE))
+        # Outer glow
+        pygame.draw.line(screen, (255, 120, 30), p1, p2, 6)
+        # Inner plasma laser
+        pygame.draw.line(screen, (255, 230, 160), p1, p2, 2)
+
+    # Plasma field nodes on intermediate tiles
+    for (px, py) in board.plasmaTiles:
+        cx = int(config.BOARD_X + (px + 0.5) * config.TILE)
+        cy = int(config.BOARD_Y + (py + 0.5) * config.TILE)
+        pygame.draw.circle(screen, (255, 180, 70), (cx, cy), 3)
+
     for tool in board.allTools():
         color = config.TOOL_COLORS.get(tool.kind, config.COLOR_TOOL)
         pygame.draw.rect(screen, color, tileRect(tool.x, tool.y).inflate(-4, -4))
+
+        # Floating mini-health bar on damaged tools/walls
+        if hasattr(tool, "hp") and hasattr(tool, "maxHp") and tool.hp < tool.maxHp:
+            tRect = tileRect(tool.x, tool.y)
+            barW = config.TILE - 2
+            barH = 2
+            barX = tRect.x + 1
+            barY = tRect.y - 3
+            pygame.draw.rect(screen, (20, 24, 32), (barX, barY, barW, barH))
+            hpPct = max(0.0, tool.hp / tool.maxHp)
+            hpColor = (70, 220, 120) if hpPct > 0.5 else ((240, 200, 60) if hpPct > 0.25 else (255, 70, 70))
+            pygame.draw.rect(screen, hpColor, (barX, barY, max(1, int(barW * hpPct)), barH))
+
     for e in enemies:
         px = config.BOARD_X + e.x * config.TILE
         py = config.BOARD_Y + e.y * config.TILE
         radius = max(2, int(e.size * config.TILE))
-        pygame.draw.circle(screen, config.COLOR_ENEMY, (int(px), int(py)), radius)
+        color = config.ENEMY_COLORS.get(e.type, config.COLOR_ENEMY)
+
+        # Distinct enemy shapes per type
+        if e.type == "injection":
+            # Sharp neon diamond (injector needle)
+            pts = [
+                (int(px), int(py - radius - 1)),
+                (int(px + radius), int(py)),
+                (int(px), int(py + radius + 1)),
+                (int(px - radius), int(py)),
+            ]
+            pygame.draw.polygon(screen, color, pts)
+
+        elif e.type == "memoryLeak":
+            # Big tank amoeba with darker cellular nucleus
+            pygame.draw.circle(screen, color, (int(px), int(py)), radius)
+            innerR = max(2, radius // 2)
+            pygame.draw.circle(screen, (25, 110, 75), (int(px), int(py)), innerR)
+
+        elif e.type == "zeroDay":
+            if getattr(e, "revealed", False):
+                pygame.draw.circle(screen, color, (int(px), int(py)), radius)
+            else:
+                # Cloaked wireframe glitch circle
+                pygame.draw.circle(screen, color, (int(px), int(py)), radius, width=1)
+                pygame.draw.circle(screen, color, (int(px), int(py)), 1)
+
+        else:
+            # Standard bug: solid red with darker core
+            pygame.draw.circle(screen, color, (int(px), int(py)), radius)
+            if radius > 3:
+                pygame.draw.circle(screen, (160, 40, 40), (int(px), int(py)), radius - 2)
+
+        # Floating health bar if damaged
+        if e.hp < e.maxHp and e.maxHp > 0:
+            barW = max(12, int(radius * 2.2))
+            barH = 3
+            barX = int(px - barW // 2)
+            barY = int(py - radius - 5)
+
+            pygame.draw.rect(screen, (20, 24, 32), (barX, barY, barW, barH))
+            hpPct = max(0.0, e.hp / e.maxHp)
+            if hpPct > 0.5:
+                hpColor = (70, 220, 120)    # Green
+            elif hpPct > 0.25:
+                hpColor = (240, 200, 60)   # Yellow
+            else:
+                hpColor = (255, 70, 70)    # Red
+
+            fillW = max(1, int(barW * hpPct))
+            pygame.draw.rect(screen, hpColor, (barX, barY, fillW, barH))
+            pygame.draw.rect(screen, (10, 14, 20), (barX, barY, barW, barH), 1)
 
     for p in projectiles:
         px = config.BOARD_X + p.x * config.TILE
@@ -338,6 +419,7 @@ while running:
             if waveSpawner.active and waveSpawner.isDone(enemies):
                 waveSpawner.active = False
                 gameState.addBytes(config.WAVE_CLEAR_BONUS)
+                gameState.regenerateCpuBetweenWaves(0.25)
                 gameState.wave += 1
                 phase = config.PHASE_BUILD
                 waveCountdown = config.WAVE_BREAK_SECONDS

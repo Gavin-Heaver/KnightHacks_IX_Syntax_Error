@@ -40,7 +40,7 @@ class HUD:
 
         #Health Bar border
         pygame.draw.rect(screen, (60, 80, 105), (barX, barY, barW, barH), width=1, border_radius=4)
-        hpLabel = self.smallFont.render(f"CPU: {int(gameState.cpuHp)}%", True, (240, 245, 250))
+        hpLabel = self.smallFont.render(f"CPU: {int(gameState.cpuHp)}/{int(gameState.cpuMaxHp)}", True, (240, 245, 250))
         labelRect = hpLabel.get_rect(center=(barX + barW // 2, barY + barH // 2))
         screen.blit(hpLabel, labelRect)
 
