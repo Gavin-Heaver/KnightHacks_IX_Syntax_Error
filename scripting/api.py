@@ -10,9 +10,10 @@ class EnemyView:
     distance: float
     speed: float
     type: str
+    isSlowed: bool = False
 
     def __repr__(self):
-        return f"EnemyView(hp={self.hp:.1f}, dist={self.distance:.1f}, speed={self.speed:.1f}, type='{self.type}')"
+        return f"EnemyView(hp={self.hp:.1f}, dist={self.distance:.1f}, speed={self.speed:.1f}, type='{self.type}', slowed={self.isSlowed})"
 
 
 def createEnemyView(enemy, toolX, toolY):
@@ -23,11 +24,13 @@ def createEnemyView(enemy, toolX, toolY):
     dy = enemy.y - (toolY + 0.5)
     dist = math.hypot(dx, dy)
     revealed_type = enemy.type if getattr(enemy, "revealed", False) else "unknown"
+    is_slowed = getattr(enemy, "slowTimer", 0.0) > 0
     return EnemyView(
         hp=float(enemy.hp),
         distance=round(dist, 2),
-        speed=float(enemy.speed),
-        type=revealed_type
+        speed=round(float(enemy.speed * getattr(enemy, "slowFactor", 1.0)), 2),
+        type=revealed_type,
+        isSlowed=is_slowed
     )
 
 

@@ -139,26 +139,64 @@ class Debugger(DefenseTool):
     Reveals hidden enemy types and slows bugs within its scanner range.
     """
     programmable = True
+
     def __init__(self, x=0, y=0):
         super().__init__("debugger", x, y)
         self.tier = 0
-        self.cycleBudget = 30
+        self.applyTierStats()
         self.script = TowerScript(DEFAULT_DEBUGGER_SCRIPT)
         self.scriptTimer = 0.0
         self.aimTarget = None
-        self.wantsToFire = False
+        self.wantsToSlow = False
+        self.scanAngle = 0.0
+
+    def applyTierStats(self):
+        """Loads stats (range, slowFactor, dps, cycles) from config.DEBUGGER_TIERS based on self.tier."""
+        tierData = config.DEBUGGER_TIERS[self.tier]
+        self.range = tierData["range"]
+        self.slowFactor = tierData["slowFactor"]
+        self.dps = tierData.get("dps", 3.5)
+        self.cycleBudget = tierData["cycles"]
+
+    def upgrade(self):
+        """Upgrades the debugger to the next tier if available."""
+        if self.tier < len(config.DEBUGGER_TIERS) - 1:
+            self.tier += 1
+            cost = config.DEBUGGER_TIERS[self.tier]["upgradeCost"]
+            self.spent += cost
+            self.applyTierStats()
+            return True
+        return False
+
     def update(self, dt, allEnemies, newProjectilesList, unlockedConcepts=None):
-        # 1. Run Python script ~8x/sec
+        # 1. Update radar sweep angle
+        self.scanAngle = (self.scanAngle + 3.0 * dt) % (2 * math.pi)
+
+        # 2. Run Python script ~8x/sec
         self.scriptTimer += dt
         tickInterval = 1.0 / config.SCRIPT_TICKS_PER_SECOND
         if self.scriptTimer >= tickInterval:
             self.scriptTimer = 0.0
             self.script.runTick(self, allEnemies, self.cycleBudget, unlockedConcepts)
-        # 2. Support Aura: scan enemies in range
+
+        # 3. Support Aura: reveal all enemies within scanner range, deal passive damage, and slow
         cx, cy = self.x + 0.5, self.y + 0.5
         for enemy in allEnemies:
             if getattr(enemy, "alive", True):
                 dist = math.hypot(enemy.x - cx, enemy.y - cy)
                 if dist <= self.range:
-                    # Reveal enemy type to scripts
                     enemy.revealed = True
+                    # Passive sphere damage over time
+                    if self.dps > 0:
+                        enemy.takeDamage(self.dps * dt)
+                    # Base passive slow inside the sphere
+                    enemy.applySlow(factor=0.8, duration=0.2)
+
+        # 4. Apply slow to aimTarget if locked within range
+        if self.aimTarget is not None and getattr(self.aimTarget, "alive", True):
+            dist = math.hypot(self.aimTarget.x - cx, self.aimTarget.y - cy)
+            if dist <= self.range:
+                self.aimTarget.applySlow(factor=self.slowFactor, duration=0.35)
+            else:
+                self.aimTarget = None
+        self.wantsToSlow = False

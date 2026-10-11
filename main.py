@@ -187,6 +187,31 @@ def drawBoard():
         color = config.TOOL_COLORS.get(tool.kind, config.COLOR_TOOL)
         pygame.draw.rect(screen, color, tileRect(tool.x, tool.y).inflate(-4, -4))
 
+        # Debugger radar ring, rotating scan sweep, and cyber tether
+        if tool.kind == "debugger":
+            dcx = int(config.BOARD_X + (tool.x + 0.5) * config.TILE)
+            dcy = int(config.BOARD_Y + (tool.y + 0.5) * config.TILE)
+            dr = int(tool.range * config.TILE)
+
+            # Glowing transparent sphere of influence
+            auraSurf = pygame.Surface((dr * 2, dr * 2), pygame.SRCALPHA)
+            pygame.draw.circle(auraSurf, (150, 60, 220, 22), (dr, dr), dr)
+            screen.blit(auraSurf, (dcx - dr, dcy - dr))
+
+            pygame.draw.circle(screen, (160, 80, 240), (dcx, dcy), dr, width=1)
+            angle = getattr(tool, "scanAngle", 0.0)
+            swX = dcx + int(math.cos(angle) * dr)
+            swY = dcy + int(math.sin(angle) * dr)
+            pygame.draw.line(screen, (200, 120, 255), (dcx, dcy), (swX, swY), 1)
+
+            # Active tether beam to aimTarget
+            target = getattr(tool, "aimTarget", None)
+            if target is not None and getattr(target, "alive", True):
+                tx = int(config.BOARD_X + target.x * config.TILE)
+                ty = int(config.BOARD_Y + target.y * config.TILE)
+                pygame.draw.line(screen, (220, 130, 255), (dcx, dcy), (tx, ty), 2)
+                pygame.draw.circle(screen, (255, 210, 255), ((dcx + tx) // 2, (dcy + ty) // 2), 3)
+
         # Floating mini-health bar on damaged tools/walls
         if hasattr(tool, "hp") and hasattr(tool, "maxHp") and tool.hp < tool.maxHp:
             tRect = tileRect(tool.x, tool.y)
@@ -204,6 +229,11 @@ def drawBoard():
         py = config.BOARD_Y + e.y * config.TILE
         radius = max(2, int(e.size * config.TILE))
         color = config.ENEMY_COLORS.get(e.type, config.COLOR_ENEMY)
+
+        # Cyber slow aura ring
+        if getattr(e, "slowTimer", 0.0) > 0:
+            slowR = radius + 3
+            pygame.draw.circle(screen, (190, 120, 255), (int(px), int(py)), slowR, width=1)
 
         # Distinct enemy shapes per type
         if e.type == "injection":
