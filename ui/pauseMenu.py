@@ -3,6 +3,9 @@ import pygame
 import config
 
 
+from ui.volumeControls import VolumeModal
+
+
 class PauseButton:
     def __init__(self, rect, text, actionKey, style="default"):
         self.rect = pygame.Rect(rect)
@@ -41,7 +44,7 @@ class PauseMenu:
     def __init__(self, screenW=config.SCREEN_W, screenH=config.SCREEN_H):
         self.screenW = screenW
         self.screenH = screenH
-        self.state = "menu"  # "menu", "confirm_restart", "confirm_menu"
+        self.state = "menu"  # "menu", "confirm_restart", "confirm_menu", "volume"
 
         # Fonts
         self.titleFont = pygame.font.SysFont("consolas", 28, bold=True)
@@ -50,22 +53,27 @@ class PauseMenu:
         self.bodyFont = pygame.font.SysFont("consolas", 16)
         self.hintFont = pygame.font.SysFont("consolas", 13)
 
+        # Volume Controls Modal
+        self.volumeModal = VolumeModal(screenW // 2, screenH // 2, width=600, height=440, backText="BACK TO PAUSE")
+
         # Setup Buttons
         self._buildButtons()
 
     def _buildButtons(self):
         # 1. Main Pause Menu Box
-        self.mainPanelW, self.mainPanelH = 380, 270
+        self.mainPanelW, self.mainPanelH = 380, 328
         px = (self.screenW - self.mainPanelW) // 2
         py = (self.screenH - self.mainPanelH) // 2
         self.mainPanelRect = pygame.Rect(px, py, self.mainPanelW, self.mainPanelH)
 
         btnW, btnH = 260, 42
         bx = px + (self.mainPanelW - btnW) // 2
+        gap = 52
         self.mainButtons = [
-            PauseButton((bx, py + 70, btnW, btnH), "RESUME", "resume"),
-            PauseButton((bx, py + 124, btnW, btnH), "RESTART", "restart"),
-            PauseButton((bx, py + 178, btnW, btnH), "MAIN MENU", "main_menu"),
+            PauseButton((bx, py + 66, btnW, btnH), "RESUME", "resume"),
+            PauseButton((bx, py + 66 + gap, btnW, btnH), "VOLUME CONTROLS", "volume"),
+            PauseButton((bx, py + 66 + gap * 2, btnW, btnH), "RESTART", "restart"),
+            PauseButton((bx, py + 66 + gap * 3, btnW, btnH), "MAIN MENU", "main_menu"),
         ]
 
         # 2. Confirm Restart Dialog Box
@@ -100,6 +108,12 @@ class PauseMenu:
             "main_menu" -> reset and return to title screen
             None        -> stay in pause menu
         """
+        if self.state == "volume":
+            action = self.volumeModal.handleEvent(event)
+            if action == "back":
+                self.state = "menu"
+            return None
+
         if event.type == pygame.MOUSEMOTION:
             mpos = event.pos
             if self.state == "menu":
@@ -119,6 +133,8 @@ class PauseMenu:
                     if b.rect.collidepoint(mpos):
                         if b.actionKey == "resume":
                             return "resume"
+                        elif b.actionKey == "volume":
+                            self.state = "volume"
                         elif b.actionKey == "restart":
                             self.state = "confirm_restart"
                         elif b.actionKey == "main_menu":
@@ -143,7 +159,7 @@ class PauseMenu:
 
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
-                if self.state in ("confirm_restart", "confirm_menu"):
+                if self.state in ("confirm_restart", "confirm_menu", "volume"):
                     self.state = "menu"
                 else:
                     return "resume"
@@ -167,6 +183,8 @@ class PauseMenu:
             self._drawConfirmRestart(screen)
         elif self.state == "confirm_menu":
             self._drawConfirmMenu(screen)
+        elif self.state == "volume":
+            self.volumeModal.draw(screen)
 
     def _drawMainMenu(self, screen):
         rect = self.mainPanelRect
