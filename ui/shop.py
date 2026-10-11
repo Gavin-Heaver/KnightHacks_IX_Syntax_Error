@@ -192,6 +192,7 @@ class ShopPanel:
                     cost = tiers[selectedTool.tier + 1]["upgradeCost"]
                     if gameState.spendBytes(cost):
                         selectedTool.upgrade()
+                        board.dirty = True
 
             #repair
             elif event.ui_element == self.btnRepair and selectedTool is not None:

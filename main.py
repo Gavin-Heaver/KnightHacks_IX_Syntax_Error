@@ -172,24 +172,45 @@ def drawBoard():
         pygame.draw.rect(screen, config.COLOR_CPU, tileRect(x, y).inflate(-2, -2))
 
     # Firewall plasma links between aligned posts within range
+    damTiles = board.damagingPlasmaTiles
     for link in board.plasmaLinks:
         (x1, y1), (x2, y2) = link[0], link[1]
+        isDamaging = link[2] if len(link) > 2 else False
         p1 = (int(config.BOARD_X + (x1 + 0.5) * config.TILE), int(config.BOARD_Y + (y1 + 0.5) * config.TILE))
         p2 = (int(config.BOARD_X + (x2 + 0.5) * config.TILE), int(config.BOARD_Y + (y2 + 0.5) * config.TILE))
-        # Outer glow
-        pygame.draw.line(screen, (255, 120, 30), p1, p2, 6)
-        # Inner plasma laser
-        pygame.draw.line(screen, (255, 230, 160), p1, p2, 2)
+        if isDamaging:
+            # Electric blue/violet high-voltage damaging plasma
+            pygame.draw.line(screen, (80, 180, 255), p1, p2, 8)
+            pygame.draw.line(screen, (220, 240, 255), p1, p2, 2)
+        else:
+            # Standard orange plasma laser
+            pygame.draw.line(screen, (255, 120, 30), p1, p2, 6)
+            pygame.draw.line(screen, (255, 230, 160), p1, p2, 2)
 
     # Plasma field nodes on intermediate tiles
     for (px, py) in board.plasmaTiles:
         cx = int(config.BOARD_X + (px + 0.5) * config.TILE)
         cy = int(config.BOARD_Y + (py + 0.5) * config.TILE)
-        pygame.draw.circle(screen, (255, 180, 70), (cx, cy), 3)
+        if (px, py) in damTiles:
+            pygame.draw.circle(screen, (120, 220, 255), (cx, cy), 4)
+        else:
+            pygame.draw.circle(screen, (255, 180, 70), (cx, cy), 3)
 
     for tool in board.allTools():
         color = config.TOOL_COLORS.get(tool.kind, config.COLOR_TOOL)
         pygame.draw.rect(screen, color, tileRect(tool.x, tool.y).inflate(-4, -4))
+
+        # Tier 3 Turret constant laser beam
+        if tool.kind == "turret" and getattr(tool, "tier", 0) >= 2:
+            lt = getattr(tool, "laserTarget", None)
+            if lt is not None and getattr(lt, "alive", True):
+                tcx = int(config.BOARD_X + (tool.x + 0.5) * config.TILE)
+                tcy = int(config.BOARD_Y + (tool.y + 0.5) * config.TILE)
+                tx = int(config.BOARD_X + lt.x * config.TILE)
+                ty = int(config.BOARD_Y + lt.y * config.TILE)
+                pygame.draw.line(screen, (70, 170, 255), (tcx, tcy), (tx, ty), 5)
+                pygame.draw.line(screen, (220, 250, 255), (tcx, tcy), (tx, ty), 2)
+                pygame.draw.circle(screen, (255, 255, 255), (tx, ty), 4)
 
         # Debugger radar ring, rotating scan sweep, and cyber tether
         if tool.kind == "debugger":
@@ -208,9 +229,9 @@ def drawBoard():
             swY = dcy + int(math.sin(angle) * dr)
             pygame.draw.line(screen, (200, 120, 255), (dcx, dcy), (swX, swY), 1)
 
-            # Active tether beam to aimTarget
+            # Active tether beam to aimTarget (if slow is unlocked)
             target = getattr(tool, "aimTarget", None)
-            if target is not None and getattr(target, "alive", True):
+            if target is not None and getattr(target, "alive", True) and getattr(tool, "slowFactor", 1.0) < 1.0:
                 tx = int(config.BOARD_X + target.x * config.TILE)
                 ty = int(config.BOARD_Y + target.y * config.TILE)
                 pygame.draw.line(screen, (220, 130, 255), (dcx, dcy), (tx, ty), 2)
@@ -293,7 +314,12 @@ def drawBoard():
     for p in projectiles:
         px = config.BOARD_X + p.x * config.TILE
         py = config.BOARD_Y + p.y * config.TILE
-        pygame.draw.circle(screen, (100, 220, 255), (int(px), int(py)), 3)
+        if getattr(p, "homingTarget", None) is not None:
+            # Gold/cyan glowing homing seeker projectile
+            pygame.draw.circle(screen, (255, 215, 60), (int(px), int(py)), 4)
+            pygame.draw.circle(screen, (255, 255, 220), (int(px), int(py)), 2)
+        else:
+            pygame.draw.circle(screen, (100, 220, 255), (int(px), int(py)), 3)
 
     if selectedTool is not None:
         selectRect = tileRect(selectedTool.x, selectedTool.y)
@@ -467,6 +493,14 @@ while running:
 
             for e in enemies:
                 e.update(dt, board, fields[e.target][e.type], enemies)
+
+            # Damaging plasma walls (Tier 3) zap enemies touching intermediate tiles
+            damTiles = board.damagingPlasmaTiles
+            if damTiles:
+                for e in enemies:
+                    if (int(e.x), int(e.y)) in damTiles:
+                        e.takeDamage(config.PLASMA_WALL_DPS * dt)
+
             enemies = [e for e in enemies if e.alive]
 
             # wave cleared -> pay out, keep some fear for next wave, start the countdown

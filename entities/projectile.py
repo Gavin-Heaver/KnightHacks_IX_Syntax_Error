@@ -4,7 +4,7 @@ import config
 
 
 class Projectile:
-    def __init__(self, startX, startY, targetX, targetY, damage, speed=config.PROJECTILE_SPEED, maxRange=6.0):
+    def __init__(self, startX, startY, targetX, targetY, damage, speed=config.PROJECTILE_SPEED, maxRange=6.0, homingTarget=None):
         self.x = float(startX)
         self.y = float(startY)
         self.damage = float(damage)
@@ -13,6 +13,7 @@ class Projectile:
         self.distTraveled = 0.0
         self.alive = True
         self.hitRadius = 0.1    # tile distance to register a hit
+        self.homingTarget = homingTarget
 
         # Calculate normalized straight-line velocity vector
         dx = targetX - startX
@@ -26,9 +27,18 @@ class Projectile:
             self.vy = 0.0
 
     def update(self, dt, allEnemies, board=None):
-        """Advances projectile in a straight line and checks for enemy collisions."""
+        """Advances projectile in a straight line or homing toward target and checks collisions."""
         if not self.alive:
             return
+
+        # Homing velocity adjustment toward locked bug
+        if self.homingTarget is not None and getattr(self.homingTarget, "alive", True):
+            dx = self.homingTarget.x - self.x
+            dy = self.homingTarget.y - self.y
+            dist = math.hypot(dx, dy)
+            if dist > 0.01:
+                self.vx = (dx / dist) * self.speed
+                self.vy = (dy / dist) * self.speed
 
         stepX = self.vx * dt
         stepY = self.vy * dt
