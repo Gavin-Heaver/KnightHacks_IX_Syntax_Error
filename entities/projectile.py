@@ -1,6 +1,7 @@
 # entities/projectile.py -- Linear projectile physics and collision.
 import math
 import config
+from game.audio import audioManager
 
 
 class Projectile:
@@ -80,6 +81,7 @@ class Projectile:
                     d = math.hypot(self.x - (tool.x + 0.5), self.y - (tool.y + 0.5))
                     if d <= 0.45:
                         tool.takeDamage(self.damage)
+                        audioManager.sfx("hit")
                         board.hpChanged = True
                         self.alive = False
                         break
@@ -94,5 +96,7 @@ class Projectile:
             d = math.hypot(self.x - enemy.x, self.y - enemy.y)
             if d <= self.hitRadius + enemy.size:
                 enemy.takeDamage(self.damage)
+                if enemy.alive:
+                    audioManager.sfx("hit")   # killing blows get the bugKill sound instead
                 self.alive = False
                 break

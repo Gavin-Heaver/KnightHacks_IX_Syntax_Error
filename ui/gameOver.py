@@ -2,6 +2,7 @@
 import pygame
 import config
 import random
+from game.audio import audioManager
 
 
 class GameOverTerminal:
@@ -47,9 +48,11 @@ class GameOverTerminal:
             if event.key == pygame.K_RETURN:
                 finalName = self.playerName.strip() or "Hacker"
                 self.playerName = finalName
+                audioManager.sfx("select")
                 return "submitted"
 
             elif event.key == pygame.K_ESCAPE:
+                audioManager.sfx("back")
                 return "quit"
 
             elif event.key == pygame.K_BACKSPACE:

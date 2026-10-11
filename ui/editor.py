@@ -2,6 +2,7 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIPanel, UITextEntryBox, UIButton, UITextBox, UILabel
 import config
+from game.audio import audioManager
 
 class CodeEditor:
     def __init__(self, uiManager):
@@ -66,6 +67,7 @@ class CodeEditor:
         success = self.currentTool.script.compile(unlockedConcepts=unlockedConcepts)
 
         if success:
+            audioManager.sfx("upgrade")
             if getattr(self.currentTool, "corrupted", False):
                 self.currentTool.corrupted = False
                 if board is not None:
@@ -76,6 +78,7 @@ class CodeEditor:
                 self.consoleBox.set_text("<font color='#55FA91'><b>// COMPILE SUCCESSFUL!</b></font><br>Tower logic flashed to hardware.")
         
         else:
+            audioManager.sfx("corrupt")
             errorMsg = self.currentTool.script.error
             self.consoleBox.set_text(f"<font color='#FF4646'><b>// COMPILE ERROR:</b></font><br>{errorMsg}")
 
@@ -85,6 +88,7 @@ class CodeEditor:
                 self.compileCode(unlockedConcepts=unlockedConcepts, board=board)
                 
             elif event.ui_element == self.closeBtn:
+                audioManager.sfx("back")
                 self.close()
 
         
