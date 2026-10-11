@@ -26,7 +26,7 @@ from entities.enemy import Enemy
 from ui.debugOverlay import DebugOverlay
 from game.gameState import GameState
 from game.waves import WaveSpawner
-from ai.costLayers import buildFields
+from ai.costLayers import buildFields, buildOneField
 from ai.pheromone import PheromoneMap
 
 ###DEBUG
@@ -96,6 +96,7 @@ hintFont = pygame.font.SysFont("consolas", 20)
 pheromones = PheromoneMap(board.width, board.height)   # fear left by dead enemies
 aiTimer = 0.0                                          # counts up to AI_TICK_SECONDS
 fields = buildFields(board, pheromones.grid)           # one flow field per enemy type
+fieldJobs = []                                         # fields still to refresh after an AI tick (one per frame)
 
 
 def beginWave():
@@ -106,7 +107,7 @@ def beginWave():
 
 def resetGame():
     global board, gameState, enemies, projectiles, waveSpawner
-    global waveCountdown, selectedTool, paused, phase, fields, pheromones, aiTimer, scoreRecorded
+    global waveCountdown, selectedTool, paused, phase, fields, fieldJobs, pheromones, aiTimer, scoreRecorded
 
     scoreRecorded = False
 
@@ -126,6 +127,7 @@ def resetGame():
     pheromones = PheromoneMap(board.width, board.height)  # re-subscribes itself
     aiTimer = 0.0
     fields = buildFields(board, pheromones.grid)
+    fieldJobs = []
     paused = False
     phase = config.PHASE_MENU
     events.subscribe("toolDestroyed", onToolDestroyed)
@@ -442,10 +444,20 @@ while running:
                 aiTimer = 0.0
                 pheromones.tick()
 
-            # rebuild flow fields when the board changes, or when fear has shifted
-            if board.dirty or (aiTick and pheromones.isActive()):
+            # board changed (place / remove / destroy) -> rebuild everything now so nobody walks into a new tool
+            if board.dirty:
                 fields = buildFields(board, pheromones.grid)
                 board.dirty = False
+                board.hpChanged = False
+                fieldJobs = []
+            # fear shifted or tools took damage -> queue every field, then refresh one per frame
+            elif aiTick and (pheromones.isActive() or board.hpChanged) and not fieldJobs:
+                fieldJobs = [(target, enemyType) for target in fields for enemyType in fields[target]]
+                board.hpChanged = False
+
+            if fieldJobs:
+                target, enemyType = fieldJobs.pop()
+                fields[target][enemyType] = buildOneField(board, pheromones.grid, target, enemyType)
 
             for p in projectiles:
                 p.update(dt, enemies, board)

@@ -82,10 +82,10 @@ FIREWALL_MAX_LEN = 5
 # ---------------------------------------------------------------- enemies
 # hp, speed (tiles/sec), bytes reward, damage per second to tools/CPU
 ENEMY_STATS = {
-    "bug":        {"hp": 20,  "speed": 2.0, "reward": 5,  "dps": 4.0, "size": .30},
-    "memoryLeak": {"hp": 100, "speed": 1.0, "reward": 20, "dps": 6.0, "size": .75},
-    "zeroDay":    {"hp": 10,  "speed": 1.7, "reward": 15, "dps": 3.0, "size": .20},
-    "injection":  {"hp": 10,  "speed": 3.5, "reward": 10, "dps": 0.0, "size": .35},
+    "bug":        {"hp": 20,  "speed": 3.0, "reward": 10,  "dps": 4.0, "size": .30},
+    "memoryLeak": {"hp": 100, "speed": 1.5, "reward": 40, "dps": 6.0, "size": .75},
+    "zeroDay":    {"hp": 10,  "speed": 2.5, "reward": 35, "dps": 3.0, "size": .20},
+    "injection":  {"hp": 10,  "speed": 5.0, "reward": 20, "dps": 0.0, "size": .35},
 }
 
 SPEED_VARIANCE = 0.15

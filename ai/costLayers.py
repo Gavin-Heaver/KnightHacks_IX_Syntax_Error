@@ -63,17 +63,26 @@ def toolTargetTiles(board):
                 targets.add((nx, ny))
     return list(targets)
 
+def buildOneField(board, fear, target, enemyType, fire=None, towerGoals=None):
+    if fire is None:
+        fire = buildFireLayer(board)
+    if target == "cpu":
+        goals = board.cpuTiles
+    else:
+        goals = towerGoals if towerGoals is not None else toolTargetTiles(board)
+        #attackers with nothing to hunt go for the CPU; injections get no goals (-> they die)
+        if not goals and enemyType != "injection":
+            goals = board.cpuTiles
+    return buildField(board, goals, fieldCost(board, target, enemyType, fire, fear))
+
 def buildFields(board, fear):
     fire = buildFireLayer(board)
     towerGoals = toolTargetTiles(board)
     fields = {"cpu": {}, "tower": {}}
     for enemyType in config.AI_WEIGHTS:
-        fields["cpu"][enemyType] = buildField(board, board.cpuTiles, fieldCost(board, "cpu", enemyType, fire, fear))
+        fields["cpu"][enemyType] = buildOneField(board, fear, "cpu", enemyType, fire, towerGoals)
         if config.TOWER_TARGET_CHANCE.get(enemyType, 0) > 0:
-            goals = towerGoals
-            if not goals and enemyType != "injection":
-                goals = board.cpuTiles
-            fields["tower"][enemyType] = buildField(board, goals, fieldCost(board, "tower", enemyType, fire, fear))
+            fields["tower"][enemyType] = buildOneField(board, fear, "tower", enemyType, fire, towerGoals)
     return fields
 
 
