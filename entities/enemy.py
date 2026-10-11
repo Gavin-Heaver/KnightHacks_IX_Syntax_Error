@@ -3,7 +3,7 @@
 import config
 import math
 import random
-from game import events
+from game import events, corruption
 from ai.flowField import nextStep
 from ai.steering import separation, clearPath
 
@@ -20,6 +20,7 @@ class Enemy:
         self.reward = stats["reward"]
         self.dps = stats["dps"]
         self.size = stats["size"] * random.uniform(1 - config.SIZE_VARIANCE, 1 + config.SIZE_VARIANCE)
+        self.target = "tower" if random.random() < config.TOWER_TARGET_CHANCE.get(enemyType, 0) else "cpu"
         self.revealed = False        # set by Debugger
         self.alive = True
         self.offsetX = random.uniform(-0.3, 0.3)
@@ -59,8 +60,21 @@ class Enemy:
         #finding which tile subject is positioned
         tileX, tileY = int(self.x), int(self.y)
 
+        if self.target == "tower":
+            tower = self._adjacentTower(board, tileX, tileY)
+            if tower is not None:
+                if self.type == "injection":
+                    corruption.corrupt(tower)
+                    board.dirty = True
+                    self.alive = False
+                else:
+                    sepX, sepY = separation(self, enemies, config.SWARM_SEP_RADIUS)
+                    tower.takeDamage(self.dps * dt)
+                    self._nudge(board, sepX, sepY, dt)
+                return
+
         spotFree = board.toolAt(math.floor(self.spotX), math.floor(self.spotY)) is None
-        approaching = dist[tileY][tileX] <= config.APPROACH_RANGE and spotFree and clearPath(board, self.x, self.y, self.spotX, self.spotY)
+        approaching = self.target == "cpu" and dist[tileY][tileX] <= config.APPROACH_RANGE and spotFree and clearPath(board, self.x, self.y, self.spotX, self.spotY)
 
         if approaching:
             sepX, sepY = separation(self, enemies, config.SWARM_SEP_RADIUS)
@@ -163,5 +177,11 @@ class Enemy:
         tx, ty = math.floor(fx), math.floor(fy)
         return board.inBounds(tx, ty) and not board.isCpu(tx, ty) and board.toolAt(tx, ty) is None
 
-        
+    @staticmethod
+    def _adjacentTower(board, tileX, tileY):
+        for nx, ny in board.neighbors(tileX, tileY):
+            tool = board.toolAt(nx, ny)
+            if tool is not None and getattr(tool, "programmable", False) and not getattr(tool, "corrupted", False):
+                return tool
+        return None
 

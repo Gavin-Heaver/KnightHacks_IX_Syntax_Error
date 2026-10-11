@@ -337,7 +337,7 @@ while running:
             waveSpawner.update(dt, board, enemies)
 
             for e in enemies:
-                e.update(dt, board, fields[e.type], enemies)
+                e.update(dt, board, fields[e.target][e.type], enemies)
             enemies = [e for e in enemies if e.alive]
 
             # wave cleared -> pay out, keep some fear for next wave, start the countdown
@@ -361,7 +361,7 @@ while running:
         drawBoard()
 
         if overlayMode == 1:
-            drawFlowArrows(screen, board, fields["bug"])
+            drawFlowArrows(screen, board, fields["cpu"]["bug"])
         elif overlayMode == 2:
             drawHeatmap(screen, pheromones.grid)
 
