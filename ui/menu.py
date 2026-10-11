@@ -77,11 +77,13 @@ class MenuButton:
         screen.blit(txtSurf, txtRect)
 
 
+from ui.volumeControls import VolumeModal
+
 class StartMenu:
     def __init__(self, screenW=config.SCREEN_W, screenH=config.SCREEN_H):
         self.screenW = screenW
         self.screenH = screenH
-        self.state = "main"    # "main", "scoreboard", "guide"
+        self.state = "main"    # "main", "scoreboard", "guide", "volume"
 
         # Fonts
         self.titleFont = pygame.font.SysFont("consolas", 68, bold=True)
@@ -114,24 +116,36 @@ class StartMenu:
             except Exception as e:
                 print("Failed to load logo:", e)
 
-        # Scaled Up Buttons
-        btnW, btnH = 380, 54
+        # Scaled Up Buttons (with Full Screen and Volume buttons)
+        btnW, btnH = 380, 46
         startX = (screenW - btnW) // 2
-        startY = 296
-        gap = 68
+        startY = 298
+        gap = 54
 
+        self.btnFullscreen = MenuButton((startX, startY + gap * 4, btnW, btnH), "FULL SCREEN", "fullscreen", style="main")
         self.mainButtons = [
             MenuButton((startX, startY, btnW, btnH), "PLAY GAME", "play", style="main"),
             MenuButton((startX, startY + gap, btnW, btnH), "SCOREBOARD", "scoreboard", style="main"),
             MenuButton((startX, startY + gap * 2, btnW, btnH), "GUIDE & MANUAL", "guide", style="main"),
-            MenuButton((startX, startY + gap * 3, btnW, btnH), "QUIT GAME", "quit", style="main"),
+            MenuButton((startX, startY + gap * 3, btnW, btnH), "VOLUME CONTROLS", "volume", style="main"),
+            self.btnFullscreen,
+            MenuButton((startX, startY + gap * 5, btnW, btnH), "QUIT GAME", "quit", style="main"),
         ]
 
         # Modal Back Button (styled with cyber terminal theme)
         self.backBtn = MenuButton((startX, 608, btnW, 52), "BACK TO MENU", "back", style="main")
 
+        # Volume Controls Modal
+        self.volumeModal = VolumeModal(screenW // 2, screenH // 2, width=640, height=450, backText="BACK TO MENU")
+
     def handleEvent(self, event):
         """Processes events. Returns action string: 'play', 'quit', or None."""
+        if self.state == "volume":
+            action = self.volumeModal.handleEvent(event)
+            if action == "back":
+                self.state = "main"
+            return None
+
         if event.type == pygame.MOUSEMOTION:
             mpos = event.pos
             if self.state == "main":
@@ -147,9 +161,11 @@ class StartMenu:
                     if b.rect.collidepoint(mpos):
                         if b.actionKey == "play":
                             return "play"
+                        elif b.actionKey == "fullscreen":
+                            return "fullscreen"
                         elif b.actionKey == "quit":
                             return "quit"
-                        elif b.actionKey in ("scoreboard", "guide"):
+                        elif b.actionKey in ("scoreboard", "guide", "volume"):
                             self.state = b.actionKey
                             return None
             else:
@@ -213,6 +229,12 @@ class StartMenu:
             scrim.fill((5, 12, 18, 140))
             screen.blit(scrim, (0, 0))
             self._drawGuideView(screen)
+        elif self.state == "volume":
+            # Darkened scrim overlay for volume configuration modal
+            scrim = pygame.Surface((self.screenW, self.screenH), pygame.SRCALPHA)
+            scrim.fill((5, 12, 18, 140))
+            screen.blit(scrim, (0, 0))
+            self.volumeModal.draw(screen)
 
     def _drawDecorations(self, screen):
         # Subtle circuit grid lines
@@ -224,9 +246,14 @@ class StartMenu:
             pygame.draw.line(screen, gridCol, (0, y), (self.screenW, y), 1)
 
     def _drawMainView(self, screen):
+        # Update Fullscreen button label dynamically
+        surf = pygame.display.get_surface()
+        isFull = bool(surf and (surf.get_flags() & pygame.FULLSCREEN))
+        self.btnFullscreen.text = "WINDOWED MODE" if isFull else "FULL SCREEN"
+
         # Game Logo at top (with soft dark circular backing for high contrast)
         if self.logo:
-            logoCenter = (self.screenW // 2, 85)
+            logoCenter = (self.screenW // 2, 74)
             backingSurf = pygame.Surface((156, 156), pygame.SRCALPHA)
             pygame.draw.circle(backingSurf, (8, 14, 22, 190), (78, 78), 75)
             pygame.draw.circle(backingSurf, (35, 110, 75, 220), (78, 78), 75, width=2)
@@ -237,7 +264,7 @@ class StartMenu:
         titleText = "SYNTAX ERROR"
         textSurf = self.titleFont.render(titleText, True, (105, 255, 160))
         glowSurf = self.titleFont.render(titleText, True, (20, 110, 65))
-        tRect = textSurf.get_rect(center=(self.screenW // 2, 195))
+        tRect = textSurf.get_rect(center=(self.screenW // 2, 172))
 
         # Backing pill for title readability against background bars
         titleBacking = pygame.Surface((tRect.width + 44, tRect.height + 12), pygame.SRCALPHA)
@@ -251,7 +278,7 @@ class StartMenu:
         # Subtitle: CODE TOWER DEFENSE (24pt bold)
         subText = "CODE TOWER DEFENSE // KNIGHT HACKS IX // PYTHON 3"
         subSurf = self.subFont.render(subText, True, (140, 225, 245))
-        sRect = subSurf.get_rect(center=(self.screenW // 2, 246))
+        sRect = subSurf.get_rect(center=(self.screenW // 2, 242))
 
         # Subtitle backing
         subBacking = pygame.Surface((sRect.width + 30, sRect.height + 8), pygame.SRCALPHA)
@@ -261,27 +288,12 @@ class StartMenu:
 
         screen.blit(subSurf, sRect)
 
-        # Scaled up decorative bracket frame around buttons (460x300) with frosted cyber glass
-        bracketW = 460
-        bracketH = 300
+        # Expanded decorative bracket frame around 6 buttons (440x340) with frosted cyber glass
+        bracketW = 440
+        bracketH = 340
         bx = (self.screenW - bracketW) // 2
-        by = 280
-        frameSurf = pygame.Surface((bracketW, bracketH), pygame.SRCALPHA)
-        frameSurf.fill((10, 18, 26, 215))
-        screen.blit(frameSurf, (bx, by))
-        pygame.draw.rect(screen, (50, 150, 95), (bx, by, bracketW, bracketH), 2, border_radius=8)
-
-        # Corner accent notches for cyberpunk aesthetic
-        cornerLen = 14
-        accCol = (80, 245, 140)
-        pygame.draw.line(screen, accCol, (bx, by), (bx + cornerLen, by), 3)
-        pygame.draw.line(screen, accCol, (bx, by), (bx, by + cornerLen), 3)
-        pygame.draw.line(screen, accCol, (bx + bracketW, by), (bx + bracketW - cornerLen, by), 3)
-        pygame.draw.line(screen, accCol, (bx + bracketW, by), (bx + bracketW, by + cornerLen), 3)
-        pygame.draw.line(screen, accCol, (bx, by + bracketH), (bx + cornerLen, by + bracketH), 3)
-        pygame.draw.line(screen, accCol, (bx, by + bracketH), (bx, by + bracketH - cornerLen), 3)
-        pygame.draw.line(screen, accCol, (bx + bracketW, by + bracketH), (bx + bracketW - cornerLen, by + bracketH), 3)
-        pygame.draw.line(screen, accCol, (bx + bracketW, by + bracketH), (bx + bracketW, by + bracketH - cornerLen), 3)
+        by = 286
+        self._drawCyberFrame(screen, (bx, by, bracketW, bracketH), fillAlpha=215)
 
         # Buttons
         for b in self.mainButtons:

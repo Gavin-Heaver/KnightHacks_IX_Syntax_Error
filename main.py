@@ -39,12 +39,22 @@ from ui.hud import HUD
 from ui.editor import CodeEditor
 from ui.gameOver import GameOverTerminal
 from ui.pauseMenu import PauseMenu
+from game.audio import audioManager
 
 #setup
 random.seed(config.DEMO_SEED)   # deterministic demo (use only `random` for randomness)
 pygame.init()
-screen = pygame.display.set_mode((config.SCREEN_W, config.SCREEN_H))
+screen = pygame.display.set_mode((config.SCREEN_W, config.SCREEN_H), pygame.SCALED)
 pygame.display.set_caption("Syntax Error: Code Tower Defense")
+
+def toggleFullscreen():
+    """Toggles fullscreen mode smoothly while maintaining the 1280x720 scaled aspect ratio."""
+    success = pygame.display.toggle_fullscreen()
+    if not success:
+        curr = bool(pygame.display.get_surface().get_flags() & pygame.FULLSCREEN)
+        newFlags = pygame.SCALED if curr else (pygame.FULLSCREEN | pygame.SCALED)
+        pygame.display.set_mode((config.SCREEN_W, config.SCREEN_H), newFlags)
+
 clock = pygame.time.Clock()
 uiManager = pygame_gui.UIManager((config.SCREEN_W, config.SCREEN_H))
 running = True
@@ -380,11 +390,16 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_F11:
+            toggleFullscreen()
+
         # ---- main menu
         if phase == config.PHASE_MENU:
             action = startMenu.handleEvent(event)
             if action == "play":
                 phase = config.PHASE_BUILD
+            elif action == "fullscreen":
+                toggleFullscreen()
             elif action == "quit":
                 running = False
             continue
