@@ -4,7 +4,7 @@ import config
 import math
 import random
 from game import events, corruption
-from ai.flowField import nextStep
+from ai.flowField import nextStep, INF
 from ai.steering import separation, clearPath
 
 
@@ -59,6 +59,10 @@ class Enemy:
 
         #finding which tile subject is positioned
         tileX, tileY = int(self.x), int(self.y)
+
+        if self.type == "injection" and dist[tileY][tileX] == INF:
+            self.alive = False
+            return
 
         if self.target == "tower":
             tower = self._adjacentTower(board, tileX, tileY)

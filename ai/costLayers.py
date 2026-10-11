@@ -64,5 +64,8 @@ def buildFields(board, fear):
     for enemyType in config.AI_WEIGHTS:
         fields["cpu"][enemyType] = buildField(board, board.cpuTiles, makeCost(board, enemyType, fire, fear))
         if config.TOWER_TARGET_CHANCE.get(enemyType, 0) > 0:
+            goals = towerGoals
+            if not goals and enemyType != "injection":
+                goals = board.cpuTiles
             fields["tower"][enemyType] = buildField(board, towerGoals, makeCost(board, enemyType, fire, fear, fireWeight = 0.0))
     return fields
