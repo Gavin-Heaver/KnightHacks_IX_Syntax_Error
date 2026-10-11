@@ -14,7 +14,7 @@ class ScriptValidationError(Exception):
 
 class ASTValidator(ast.NodeVisitor):
     def __init__(self, unlockedConcepts=None):
-        self.unlocked = set(unlockedConcepts) if unlockedConcepts is not None else {"if"}
+        self.unlocked = set(unlockedConcepts) if unlockedConcepts is not None else {"if", "for", "while", "memory"}
 
     def visit_Import(self, node):
         raise ScriptValidationError("Imports are forbidden in tower scripts.")

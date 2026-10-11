@@ -10,7 +10,7 @@ class GameState:
         self.cpuMaxHp = float(config.CPU_MAX_HP)
         self.wave = 1
         self.phase = config.PHASE_BUILD
-        self.unlockedConcepts = {"if"}
+        self.unlockedConcepts = {"if", "for", "while", "memory"}
         self.bugsKilled = 0
         self.totalBytesEarned = config.START_BYTES
 

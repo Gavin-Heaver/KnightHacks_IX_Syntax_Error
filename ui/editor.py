@@ -13,7 +13,7 @@ class CodeEditor:
 
     def buildUI(self):
         self.panel = UIPanel (
-            relative_rect=pygame.Rect((980, 56), (284, 648)), manager=self.uiManager
+            relative_rect=pygame.Rect((980, config.BOARD_Y), (284, config.BOARD_PX_H)), manager=self.uiManager
         )
 
         self.titleLabel = UILabel(
