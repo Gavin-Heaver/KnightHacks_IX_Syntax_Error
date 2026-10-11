@@ -21,7 +21,7 @@ class Enemy:
         self.dps = stats["dps"]
         self.size = stats["size"] * random.uniform(1 - config.SIZE_VARIANCE, 1 + config.SIZE_VARIANCE)
         self.target = "tower" if random.random() < config.TOWER_TARGET_CHANCE.get(enemyType, 0) else "cpu"
-        self.revealed = False        # set by Debugger
+        self.revealed = False        # set by Antivirus
         self.alive = True
         self.offsetX = random.uniform(-0.3, 0.3)
         self.offsetY = random.uniform(-0.3, 0.3)
@@ -212,9 +212,10 @@ class Enemy:
     def _adjacentTower(board, tileX, tileY):
         for nx, ny in board.neighbors(tileX, tileY):
             tool = board.toolAt(nx, ny)
-            if tool is not None and tool.kind in ("turret", "debugger") and not getattr(tool, "corrupted", False):
+            if tool is not None and tool.kind in ("debugger", "antivirus", "turret") and not getattr(tool, "corrupted", False):
                 return tool
         return None
+
 
     def _touchingCpu(self):
         nearX = min(max(self.x, config.CPU_X), config.CPU_X + config.CPU_W)

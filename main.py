@@ -30,8 +30,9 @@ from ai.costLayers import buildFields, buildOneField
 from ai.pheromone import PheromoneMap
 
 ###DEBUG
-from entities.tools import Turret, Firewall, Debugger
+from entities.tools import Debugger, Firewall, Antivirus, Turret
 ###DEBUG
+
 from ui.shop import ShopPanel
 from ui.menu import StartMenu, recordNewScore
 from ui.hud import HUD
@@ -210,8 +211,8 @@ def drawBoard():
             pygame.draw.line(screen, (255, 40, 40), (tRect.left + m, tRect.top + m), (tRect.right - m, tRect.bottom - m), 2)
             pygame.draw.line(screen, (255, 40, 40), (tRect.left + m, tRect.bottom - m), (tRect.right - m, tRect.top + m), 2)
 
-        # Tier 3 Turret constant laser beam
-        if tool.kind == "turret" and getattr(tool, "tier", 0) >= 2:
+        # Tier 3 Debugger (formerly Turret) constant laser beam
+        if tool.kind in ("debugger", "turret") and getattr(tool, "tier", 0) >= 2:
             lt = getattr(tool, "laserTarget", None)
             isLtAlive = getattr(lt, "alive", True) if hasattr(lt, "alive") else (getattr(lt, "hp", 1) > 0)
             if lt is not None and isLtAlive:
@@ -228,11 +229,12 @@ def drawBoard():
                     pygame.draw.line(screen, (220, 250, 255), (tcx, tcy), (tx, ty), 2)
                     pygame.draw.circle(screen, (255, 255, 255), (tx, ty), 4)
 
-        # Debugger radar ring, rotating scan sweep, and cyber tether
-        if tool.kind == "debugger":
+        # Antivirus (formerly Debugger) radar ring, rotating scan sweep, and cyber tether
+        if tool.kind == "antivirus":
             dcx = int(config.BOARD_X + (tool.x + 0.5) * config.TILE)
             dcy = int(config.BOARD_Y + (tool.y + 0.5) * config.TILE)
             dr = int(tool.range * config.TILE)
+
 
             # Glowing transparent sphere of influence
             auraSurf = pygame.Surface((dr * 2, dr * 2), pygame.SRCALPHA)
@@ -457,12 +459,13 @@ while running:
                     toolType = shopPanel.selectedToolType
                     cost = config.TOOL_STATS[toolType]["cost"]
                     if gameState.spendBytes(cost):
-                        if toolType == "turret":
-                            board.place(Turret(tx, ty), tx, ty)
+                        if toolType in ("debugger", "turret"):
+                            board.place(Debugger(tx, ty), tx, ty)
                         elif toolType == "firewall":
                             board.place(Firewall(tx, ty), tx, ty)
-                        elif toolType == "debugger":
-                            board.place(Debugger(tx, ty), tx, ty)
+                        elif toolType == "antivirus":
+                            board.place(Antivirus(tx, ty), tx, ty)
+
                     selectedTool = None
                     codeEditor.close()
                     shopPanel.panel.show()
