@@ -37,6 +37,7 @@ from ui.menu import StartMenu, recordNewScore
 from ui.hud import HUD
 from ui.editor import CodeEditor
 from ui.gameOver import GameOverTerminal
+from ui.pauseMenu import PauseMenu
 
 #setup
 random.seed(config.DEMO_SEED)   # deterministic demo (use only `random` for randomness)
@@ -79,6 +80,7 @@ gameState = GameState()
 codeEditor = CodeEditor(uiManager)
 hud = HUD()
 gameOverTerminal = GameOverTerminal(config.SCREEN_W, config.SCREEN_H)
+pauseMenu = PauseMenu(config.SCREEN_W, config.SCREEN_H)
 debugOverlay = DebugOverlay()
 enemies = []                    # game.enemies: list[Enemy]
 projectiles = []
@@ -332,13 +334,20 @@ while running:
                 phase = config.PHASE_MENU
             continue
 
-        # ---- paused: only ENTER (resume) and ESC (quit to menu) do anything
+        # ---- paused
         if paused:
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_RETURN:
-                    paused = False
-                elif event.key == pygame.K_ESCAPE:
-                    resetGame()
+            action = pauseMenu.handleEvent(event)
+            if action == "resume":
+                paused = False
+            elif action == "restart":
+                paused = False
+                resetGame()
+                phase = config.PHASE_BUILD
+            elif action == "main_menu":
+                paused = False
+                resetGame()
+                startMenu.state = "main"
+                phase = config.PHASE_MENU
             continue
 
         # ---- in game: UI first (Gavin's editor + shop)
@@ -358,6 +367,7 @@ while running:
         if not codeEditor.isOpen:
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 paused = True
+                pauseMenu.open()
             elif (event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN
                   and gameState.wave == 1 and not waveSpawner.active
                   and waveCountdown is None):
@@ -488,14 +498,7 @@ while running:
 
         # pause overlay on top of everything (including the shop/editor panels)
         if paused:
-            shade = pygame.Surface((config.SCREEN_W, config.SCREEN_H), pygame.SRCALPHA)
-            shade.fill((0, 0, 0, 150))
-            screen.blit(shade, (0, 0))
-            cx, cy = config.SCREEN_W // 2, config.SCREEN_H // 2
-            title = pauseFont.render("PAUSED", True, config.COLOR_TEXT)
-            hint = hintFont.render("ENTER  resume     ESC  quit to menu", True, (150, 170, 190))
-            screen.blit(title, title.get_rect(center=(cx, cy - 20)))
-            screen.blit(hint, hint.get_rect(center=(cx, cy + 35)))
+            pauseMenu.draw(screen)
 
         # Game Over overlay
         if phase == config.PHASE_GAME_OVER:
