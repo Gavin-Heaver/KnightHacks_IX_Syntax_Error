@@ -232,7 +232,8 @@ while running:
 
         # ---- in game: UI first (Gavin's editor + shop)
         uiManager.process_events(event)
-        codeEditor.handleEvent(event)
+        codeEditor.handleEvent(event, gameState.unlockedConcepts)
+
         if not codeEditor.isOpen:
             shopPanel.panel.show()
         action = shopPanel.handleEvent(event, gameState, selectedTool, board)
@@ -242,30 +243,26 @@ while running:
         elif action == "deselected":
             selectedTool = None
             codeEditor.close()
-
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-            paused = True
-
-        # ENTER starts the first wave only (later waves start themselves after the countdown)
-        elif (event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN
-              and gameState.wave == 1 and not waveSpawner.active
-              and waveCountdown is None and not codeEditor.isOpen):
-            beginWave()
-
-        ###DEBUG
-        elif event.type == pygame.KEYDOWN and event.key == pygame.K_b:
-            edges = [(x, y) for x in range(board.width) for y in (0, board.height - 1)] + \
-                    [(x, y) for y in range(board.height) for x in (0, board.width - 1)]
-            x, y = random.choice([t for t in edges if board.isBuildable(*t)])
-            enemies.append(Enemy("zeroDay", x + 0.5, y + 0.5))
-        ###DEBUG
-
-        # F1 cycles the AI overlay: off -> flow arrows -> fear heatmap -> off
-        elif event.type == pygame.KEYDOWN and event.key == pygame.K_F1:
-            overlayMode = (overlayMode + 1) % 3
+        # Keyboard shortcuts (only active when NOT typing code in the editor)
+        if not codeEditor.isOpen:
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                paused = True
+            elif (event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN
+                  and gameState.wave == 1 and not waveSpawner.active
+                  and waveCountdown is None):
+                beginWave()
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_b:
+                edges = [(x, y) for x in range(board.width) for y in (0, board.height - 1)] + \
+                        [(x, y) for y in range(board.height) for x in (0, board.width - 1)]
+                valid = [t for t in edges if board.isBuildable(*t)]
+                if valid:
+                    x, y = random.choice(valid)
+                    enemies.append(Enemy("zeroDay", x + 0.5, y + 0.5))
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_F1:
+                overlayMode = (overlayMode + 1) % 3
 
         ###DEBUG
-        elif event.type == pygame.MOUSEBUTTONDOWN:
+        if event.type == pygame.MOUSEBUTTONDOWN:
             tx = (event.pos[0] - config.BOARD_X) // config.TILE
             ty = (event.pos[1] - config.BOARD_Y) // config.TILE
             if event.button == 1:   # left click
@@ -275,8 +272,6 @@ while running:
                     codeEditor.close()
                     shopPanel.panel.show()
                 elif board.isBuildable(tx, ty):
-                    toolType = shopPanel.selectedToolType
-                if existing is None and board.isBuildable(tx, ty):
                     toolType = shopPanel.selectedToolType
                     cost = config.TOOL_STATS[toolType]["cost"]
                     if gameState.spendBytes(cost):
@@ -313,6 +308,9 @@ while running:
 
             shopPanel.update(gameState, selectedTool)
             uiManager.update(dt)
+            for tool in board.allTools():
+                if hasattr(tool, "update"):
+                    tool.update(dt, enemies, projectiles, gameState.unlockedConcepts)
 
             # AI tick: pheromones fade + spread every AI_TICK_SECONDS
             aiTimer += dt
@@ -325,10 +323,6 @@ while running:
             if board.dirty or (aiTick and pheromones.isActive()):
                 fields = buildFields(board, pheromones.grid)
                 board.dirty = False
-
-            for tool in board.allTools():
-                if hasattr(tool, "update"):
-                    tool.update(dt, enemies, projectiles)
 
             for p in projectiles:
                 p.update(dt, enemies, board)

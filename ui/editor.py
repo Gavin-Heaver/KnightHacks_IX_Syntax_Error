@@ -51,27 +51,26 @@ class CodeEditor:
         self.currentTool = None
         self.panel.hide()
 
-    def compileCode(self):
-        if self.currentTool == None:
-                return
-
+    def compileCode(self, unlockedConcepts=None):
+        if self.currentTool is None:
+            return
+        
         self.currentTool.script.sourceCode = self.codeBox.get_text()
+        # Pass player's unlocked concepts to the AST validator
+        success = self.currentTool.script.compile(unlockedConcepts=unlockedConcepts)
 
-        success = self.currentTool.script.compile()
-
-        if success == True:
+        if success:
             self.consoleBox.set_text("<font color='#46C878'><b>Compile Successful!</b></font><br>Tower logic updated.")
-
-        elif success == False:
-             errorMsg = self.currentTool.script.error
-             self.consoleBox.set_text(f"<font color='#FF4646'><b>Compile Error: </b></font><br>{errorMsg}")
-
-    def handleEvent(self,event):
+        
+        else:
+            errorMsg = self.currentTool.script.error
+            
+            self.consoleBox.set_text(f"<font color='#FF4646'><b>Compile Error:</b></font><br>{errorMsg}")
+    def handleEvent(self, event, unlockedConcepts=None):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
-
             if event.ui_element == self.compileBtn:
-                self.compileCode()
-
+                self.compileCode(unlockedConcepts=unlockedConcepts)
+                
             elif event.ui_element == self.closeBtn:
                 self.close()
 
