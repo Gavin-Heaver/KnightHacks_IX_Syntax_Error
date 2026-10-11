@@ -437,15 +437,9 @@ while running:
                   and gameState.wave == 1 and not waveSpawner.active
                   and waveCountdown is None):
                 beginWave()
-            elif event.type == pygame.KEYDOWN and event.key == pygame.K_b:
-                edges = [(x, y) for x in range(board.width) for y in (0, board.height - 1)] + \
-                        [(x, y) for y in range(board.height) for x in (0, board.width - 1)]
-                valid = [t for t in edges if board.isBuildable(*t)]
-                if valid:
-                    x, y = random.choice(valid)
-                    enemies.append(Enemy("injection", x + 0.5, y + 0.5))
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_F1:
                 debugOverlay.cycleMode()
+
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_F2:
                 debugOverlay.cycleView()
 

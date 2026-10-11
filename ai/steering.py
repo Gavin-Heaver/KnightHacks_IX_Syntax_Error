@@ -20,10 +20,12 @@ def clearPath(board, x0, y0, x1, y1, stepSize = 0.25):
     for i in range(1, samples + 1):
         t = i / samples
         tx, ty = math.floor(x0 + dx * t), math.floor(y0 + dy * t)
-        if board.toolAt(tx, ty) or (tx, ty) in board.plasmaTiles:
+        tool = board.toolAt(tx, ty)
+        if (tool and not getattr(tool, "corrupted", False)) or (tx, ty) in board.plasmaTiles:
             return False
 
     return True
+
 
 def separation(enemy, enemies, radius):
     refSize = 2 * config.ENEMY_STATS["bug"]["size"]

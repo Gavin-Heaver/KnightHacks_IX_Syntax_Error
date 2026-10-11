@@ -5,6 +5,8 @@ def buildFireLayer(board):
     fire = [[0.0] * board.width for _ in range(board.height)]
 
     for tool in board.allTools():
+        if getattr(tool, "corrupted", False):
+            continue
         dps = getattr(tool, "damage", 0) * getattr(tool, "fireRate", 0)
         if dps <= 0:
             dps = getattr(tool, "dps", 0)
@@ -44,11 +46,12 @@ def makeCost(board, enemyType, fire, fear, fireWeight = None):
             return None
 
         c = 1.0
-        if tool is not None:
+        if tool is not None and not getattr(tool, "corrupted", False):
             c += w["wall"] * tool.hp / config.BUG_DPS
         c += fireWeight * fire[y][x]
         c += w["fear"] * fear[y][x]
         return c
+
 
     return cost
 

@@ -106,12 +106,12 @@ class Turret(DefenseTool):
                 self.laserTarget = None
 
         if getattr(self, "corrupted", False):
-            # Corrupted turret attacks friendly tools at half strength within range
+            # Corrupted turret attacks good friendly tools at half strength within range
             if board is not None:
                 cx, cy = self.x + 0.5, self.y + 0.5
                 candidateTools = [
                     t for t in board.allTools()
-                    if t != self and getattr(t, "hp", 0) > 0 and math.hypot((t.x + 0.5) - cx, (t.y + 0.5) - cy) <= self.range
+                    if t != self and getattr(t, "hp", 0) > 0 and not getattr(t, "corrupted", False) and math.hypot((t.x + 0.5) - cx, (t.y + 0.5) - cy) <= self.range
                 ]
                 candidateTools.sort(key=lambda t: math.hypot((t.x + 0.5) - cx, (t.y + 0.5) - cy))
 
@@ -140,11 +140,13 @@ class Turret(DefenseTool):
                             speed=config.PROJECTILE_SPEED,
                             maxRange=self.range,
                             homingTarget=homing,
-                            targetTool=targetTool
+                            targetTool=targetTool,
+                            sourceTool=self
                         )
                         newProjectilesList.append(bullet)
                         self.fireCooldown = 1.0 / self.fireRate
             return
+
 
         # Update script timer:
         self.scriptTimer += dt
@@ -269,7 +271,7 @@ class Debugger(DefenseTool):
             if board is not None and self.dps > 0:
                 corruptedDps = self.dps * 0.20
                 for t in board.allTools():
-                    if t != self and getattr(t, "hp", 0) > 0:
+                    if t != self and getattr(t, "hp", 0) > 0 and not getattr(t, "corrupted", False):
                         if math.hypot((t.x + 0.5) - cx, (t.y + 0.5) - cy) <= self.range:
                             t.takeDamage(corruptedDps * dt)
                             board.hpChanged = True

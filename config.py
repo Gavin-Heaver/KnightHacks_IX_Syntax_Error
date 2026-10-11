@@ -46,7 +46,7 @@ APPROACH_RANGE = 10.0
 ATTACK_RANGE = .35
 
 # ---------------------------------------------------------------- economy (bytes)
-START_BYTES = 1000
+START_BYTES = 150
 WAVE_CLEAR_BONUS = 25
 SELL_REFUND = 0.5
 REPAIR_COST_PER_HP = 0.5
@@ -99,8 +99,9 @@ ENEMY_STATS = {
     "bug":        {"hp": 20,  "speed": 3.0, "reward": 10,  "dps": 4.0, "size": .30},
     "memoryLeak": {"hp": 100, "speed": 1.5, "reward": 40, "dps": 6.0, "size": .75},
     "zeroDay":    {"hp": 10,  "speed": 2.5, "reward": 35, "dps": 3.0, "size": .20},
-    "injection":  {"hp": 10,  "speed": 5.0, "reward": 20, "dps": 0.0, "size": .35},
+    "injection":  {"hp": 25,  "speed": 5.0, "reward": 20, "dps": 0.0, "size": .35},
 }
+
 
 SPEED_VARIANCE = 0.15
 SIZE_VARIANCE = 0.15
