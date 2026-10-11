@@ -4,7 +4,7 @@ import math
 from game import events
 
 from scripting.runner import TowerScript
-from scripting.defaults import DEFAULT_TURRET_SCRIPT, DEFAULT_DEBUGGER_SCRIPT
+from scripting.defaults import DEFAULT_DEBUGGER_SCRIPT, DEFAULT_ANTIVIRUS_SCRIPT, DEFAULT_TURRET_SCRIPT
 from entities.projectile import Projectile
 
 
@@ -40,18 +40,18 @@ class FakeTool(DefenseTool):
     """Stub so the AI side can test pathing/costs before real tools exist."""
 
     def __init__(self, x=0, y=0, programmable=False):
-        super().__init__("turret", x, y)
+        super().__init__("debugger", x, y)
         self.programmable = programmable
 
-class Turret(DefenseTool):
+class Debugger(DefenseTool):
     """
-    Programmable defense turret.
-    Executes a Python script to scan for enemies, aim, and shoot projectiles.
+    Programmable defense attacker (formerly Turret).
+    Executes a Python script to scan for enemies, aim, and shoot projectiles / lasers.
     """
     programmable = True
 
     def __init__(self, x=0, y=0):
-        super().__init__("turret", x, y)
+        super().__init__("debugger", x, y)
         
         # 1. Tier setup
         self.tier = 0
@@ -59,8 +59,8 @@ class Turret(DefenseTool):
         # 2. Load tier stats (damage, range, fireRate, cycleBudget)
         self.applyTierStats()
 
-        # 3. Initialize script with default turret code
-        self.script = TowerScript(DEFAULT_TURRET_SCRIPT)
+        # 3. Initialize script with default attack code
+        self.script = TowerScript(DEFAULT_DEBUGGER_SCRIPT)
 
         # 4. Aiming, laser, and weapon timers
         self.aimTarget = None
@@ -71,8 +71,8 @@ class Turret(DefenseTool):
         self.laserDuration = 0.0
 
     def applyTierStats(self):
-        """Loads stats (damage, range, fireRate, cycles, weapon) from config.TURRET_TIERS based on self.tier."""
-        tierData = config.TURRET_TIERS[self.tier]
+        """Loads stats (damage, range, fireRate, cycles, weapon) from config.DEBUGGER_TIERS based on self.tier."""
+        tierData = config.DEBUGGER_TIERS[self.tier]
         self.damage = tierData["damage"]
         self.range = tierData["range"]
         self.fireRate = tierData["fireRate"]
@@ -80,10 +80,10 @@ class Turret(DefenseTool):
         self.weapon = tierData.get("weapon", "bullet")
 
     def upgrade(self):
-        """Upgrades the turret to the next tier if available."""
-        if self.tier < len(config.TURRET_TIERS) - 1:
+        """Upgrades the debugger to the next tier if available."""
+        if self.tier < len(config.DEBUGGER_TIERS) - 1:
             self.tier += 1
-            cost = config.TURRET_TIERS[self.tier]["upgradeCost"]
+            cost = config.DEBUGGER_TIERS[self.tier]["upgradeCost"]
             self.spent += cost
             self.applyTierStats()
             self.hp = float(self.maxHp)
@@ -91,6 +91,7 @@ class Turret(DefenseTool):
         return False
 
     def update(self, dt, allEnemies, newProjectilesList, unlockedConcepts=None, board=None):
+
         """
         Runs every frame:
         1. Manages fire cooldown and laser timers.
@@ -192,7 +193,11 @@ class Turret(DefenseTool):
                 self.wantsToFire = False
 
 
+Turret = Debugger  # alias for backwards compatibility
+
+
 class Firewall(DefenseTool):
+
     """Heavy defensive wall that connects plasma barriers."""
     programmable = False
 
@@ -220,26 +225,26 @@ class Firewall(DefenseTool):
     def update(self, dt, allEnemies, newProjectilesList, unlockedConcepts=None, board=None):
         pass
 
-class Debugger(DefenseTool):
+class Antivirus(DefenseTool):
     """
-    Programmable support tower.
+    Programmable support tower (formerly Debugger).
     Reveals hidden enemy types, emits a passive damage aura, and slows bugs.
     """
     programmable = True
 
     def __init__(self, x=0, y=0):
-        super().__init__("debugger", x, y)
+        super().__init__("antivirus", x, y)
         self.tier = 0
         self.applyTierStats()
-        self.script = TowerScript(DEFAULT_DEBUGGER_SCRIPT)
+        self.script = TowerScript(DEFAULT_ANTIVIRUS_SCRIPT)
         self.scriptTimer = 0.0
         self.aimTarget = None
         self.wantsToSlow = False
         self.scanAngle = 0.0
 
     def applyTierStats(self):
-        """Loads stats (range, slowFactor, passiveSlow, dps, cycles) from config.DEBUGGER_TIERS based on self.tier."""
-        tierData = config.DEBUGGER_TIERS[self.tier]
+        """Loads stats (range, slowFactor, passiveSlow, dps, cycles) from config.ANTIVIRUS_TIERS based on self.tier."""
+        tierData = config.ANTIVIRUS_TIERS[self.tier]
         self.range = tierData["range"]
         self.slowFactor = tierData["slowFactor"]
         self.passiveSlow = tierData.get("passiveSlow", 1.0)
@@ -247,15 +252,16 @@ class Debugger(DefenseTool):
         self.cycleBudget = tierData["cycles"]
 
     def upgrade(self):
-        """Upgrades the debugger to the next tier if available."""
-        if self.tier < len(config.DEBUGGER_TIERS) - 1:
+        """Upgrades the antivirus to the next tier if available."""
+        if self.tier < len(config.ANTIVIRUS_TIERS) - 1:
             self.tier += 1
-            cost = config.DEBUGGER_TIERS[self.tier]["upgradeCost"]
+            cost = config.ANTIVIRUS_TIERS[self.tier]["upgradeCost"]
             self.spent += cost
             self.applyTierStats()
             self.hp = float(self.maxHp)
             return True
         return False
+
 
     def update(self, dt, allEnemies, newProjectilesList, unlockedConcepts=None, board=None):
         # 1. Update radar sweep angle

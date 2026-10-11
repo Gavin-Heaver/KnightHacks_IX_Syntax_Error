@@ -7,7 +7,7 @@ import config
 class ShopPanel:
     def __init__(self, uiManager):
         self.uiManager = uiManager
-        self.selectedToolType = "turret"
+        self.selectedToolType = "debugger"
         self.buildUI()
 
     def buildUI(self):
@@ -18,16 +18,18 @@ class ShopPanel:
             relative_rect=pygame.Rect((10, 8), (264, 25)), text="DEFENSIVE BITS",manager=self.uiManager,container=self.panel
         )
 
-        self.btnTurret = UIButton(
-            relative_rect=pygame.Rect((10, 36), (264, 32)),text="TURRET (50 B)",manager=self.uiManager,container=self.panel
+        self.btnDebugger = UIButton(
+            relative_rect=pygame.Rect((10, 36), (264, 32)),text="DEBUGGER (50 B)",manager=self.uiManager,container=self.panel
         )
+        self.btnTurret = self.btnDebugger  # alias
 
         self.btnFirewall = UIButton(relative_rect=pygame.Rect((10, 72), (264, 32)), text="FIREWALL (30 B)", manager=self.uiManager, container=self.panel
         )
 
-        self.btnDebugger = UIButton(
-            relative_rect=pygame.Rect((10, 108), (264, 32)), text="DEBUGGER (70 B)", manager=self.uiManager, container=self.panel
+        self.btnAntivirus = UIButton(
+            relative_rect=pygame.Rect((10, 108), (264, 32)), text="ANTIVIRUS (70 B)", manager=self.uiManager, container=self.panel
         )   
+
 
         #Tower Information
         self.inspectorLabel = UILabel(
@@ -174,12 +176,13 @@ class ShopPanel:
     def handleEvent(self, event, gameState, selectedTool, board):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             # Grid Placement
-            if event.ui_element == self.btnTurret:
-                self.selectedToolType = "turret"
+            if event.ui_element == self.btnDebugger:
+                self.selectedToolType = "debugger"
             elif event.ui_element == self.btnFirewall:
                 self.selectedToolType = "firewall"
-            elif event.ui_element == self.btnDebugger:
-                self.selectedToolType = "debugger"
+            elif event.ui_element == self.btnAntivirus:
+                self.selectedToolType = "antivirus"
+
 
             #Concept unlocks
             elif event.ui_element == self.btnUnlockFor:

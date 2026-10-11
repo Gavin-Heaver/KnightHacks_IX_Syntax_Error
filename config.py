@@ -55,11 +55,12 @@ FIX_CODE_COST = 15
 # ---------------------------------------------------------------- tools
 # cost, hp, range (tiles), dps
 TOOL_STATS = {
-    "turret":   {"cost": 50, "hp": 30,  "range": 5.0, "dps": 8.0},
-    "firewall": {"cost": 30, "hp": 120, "range": 0.0, "dps": 0.0},
-    "debugger": {"cost": 70, "hp": 40,  "range": 4.0, "dps": 4.0},
+    "debugger":  {"cost": 50, "hp": 30,  "range": 5.0, "dps": 8.0},
+    "firewall":  {"cost": 30, "hp": 120, "range": 0.0, "dps": 0.0},
+    "antivirus": {"cost": 70, "hp": 40,  "range": 4.0, "dps": 4.0},
+    "turret":    {"cost": 50, "hp": 30,  "range": 5.0, "dps": 8.0}, # alias
 }
-TURRET_TIERS = [
+DEBUGGER_TIERS = [
     # Tier 1 (base): standard bullet, range 5.0, damage 4.0
     {"cycles": 20, "damage": 4.0, "range": 5.0, "fireRate": 2.0, "weapon": "bullet", "upgradeCost": 0},
     # Tier 2: 1.3x radius (6.5), 1.5x damage (6.0), homing bullets
@@ -67,6 +68,7 @@ TURRET_TIERS = [
     # Tier 3: 2.0x radius (10.0), same damage (6.0), constant laser beam
     {"cycles": 80, "damage": 6.0, "range": 10.0, "fireRate": 3.0, "weapon": "laser", "upgradeCost": 110},
 ]
+TURRET_TIERS = DEBUGGER_TIERS # alias
 FIREWALL_TIERS = [
     # Tier 1: plasma length decreased by 2 (max length 3)
     {"maxLen": 3, "isDamaging": False, "dps": 0.0, "upgradeCost": 0},
@@ -75,7 +77,7 @@ FIREWALL_TIERS = [
     # Tier 3: plasma length increased by 2 (max length 7) + damaging plasma wall
     {"maxLen": 7, "isDamaging": True, "dps": 15.0, "upgradeCost": 85},
 ]
-DEBUGGER_TIERS = [
+ANTIVIRUS_TIERS = [
     # Tier 1: passive damage (4.0 dps), NO slow
     {"cycles": 30, "range": 4.0, "dps": 4.0, "slowFactor": 1.0, "passiveSlow": 1.0, "upgradeCost": 0},
     # Tier 2: +25% damage (5.0 dps), current slow (0.50 targeted, 0.80 passive)
@@ -84,10 +86,12 @@ DEBUGGER_TIERS = [
     {"cycles": 100, "range": 5.0, "dps": 6.0, "slowFactor": 0.25, "passiveSlow": 0.60, "upgradeCost": 95},
 ]
 TOOL_TIERS = {
-    "turret": TURRET_TIERS,
-    "firewall": FIREWALL_TIERS,
     "debugger": DEBUGGER_TIERS,
+    "firewall": FIREWALL_TIERS,
+    "antivirus": ANTIVIRUS_TIERS,
+    "turret": DEBUGGER_TIERS, # alias
 }
+
 PROJECTILE_SPEED = 12.0          # tiles per second
 FIREWALL_MIN_LEN = 2
 FIREWALL_MAX_LEN = 7
@@ -163,15 +167,18 @@ COLOR_TEXT = (220, 230, 240)
 COLOR_ERROR = (255, 70, 70)
 
 #Temps until art is made
-COLOR_TURRET = (90, 160, 255) #blue
-COLOR_FIREWALL = (255, 130, 40) #Orange
-COLOR_DEBUGGER = (185, 100, 255) #purple
+COLOR_DEBUGGER = (90, 160, 255) # Blue (attacker)
+COLOR_FIREWALL = (255, 130, 40) # Orange
+COLOR_ANTIVIRUS = (185, 100, 255) # Purple (support scanner)
+COLOR_TURRET = COLOR_DEBUGGER   # alias
 
 TOOL_COLORS = {
-    "turret": COLOR_TURRET,
-    "firewall": COLOR_FIREWALL,
     "debugger": COLOR_DEBUGGER,
+    "firewall": COLOR_FIREWALL,
+    "antivirus": COLOR_ANTIVIRUS,
+    "turret": COLOR_DEBUGGER,   # alias
 }
+
 
 COLOR_BUG = (255, 80, 80)           # Classic Bug: Red
 COLOR_MEMORY_LEAK = (60, 220, 160)  # Memory Leak: Slime Green / Teal (big tank)
