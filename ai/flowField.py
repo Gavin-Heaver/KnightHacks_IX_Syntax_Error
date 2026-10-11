@@ -14,7 +14,7 @@ def buildField(board, goals, cost):
     #cost of entering each tile, worked out once up front (None = impassable)
     #instead of 8 times per tile inside the search loop
     costGrid = [[cost(x, y) for x in range(width)] for y in range(height)]
-    solid = [[tool is not None for tool in row] for row in board.tools]
+    solid = [[(tool is not None and not getattr(tool, "corrupted", False)) for tool in row] for row in board.tools]
 
     #tiles start as unvisited
     dist = [[INF] * width for _ in range(height)]
@@ -67,8 +67,11 @@ def nextStep(dist, board, x, y):
             continue
         #checking validity of diagonal move
         if dx and dy:
-            if board.toolAt(x + dx, y) or board.toolAt(x, y + dy):
+            t1 = board.toolAt(x + dx, y)
+            t2 = board.toolAt(x, y + dy)
+            if (t1 and not getattr(t1, "corrupted", False)) or (t2 and not getattr(t2, "corrupted", False)):
                 continue
+
             
         if dist[ny][nx] < bestDist:
             bestDist = dist[ny][nx]

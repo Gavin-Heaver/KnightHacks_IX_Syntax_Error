@@ -94,7 +94,8 @@ class Enemy:
                     self._nudge(board, sepX, sepY, dt)
                 return
 
-        spotFree = board.toolAt(math.floor(self.spotX), math.floor(self.spotY)) is None
+        spotTool = board.toolAt(math.floor(self.spotX), math.floor(self.spotY))
+        spotFree = spotTool is None or getattr(spotTool, "corrupted", False)
         approaching = self.target == "cpu" and dist[tileY][tileX] <= config.APPROACH_RANGE and spotFree and clearPath(board, self.x, self.y, self.spotX, self.spotY)
 
         if approaching:
@@ -128,13 +129,14 @@ class Enemy:
             self._nudge(board, sepX, sepY, dt)
             return
 
-        #tool found, subject attacks and tool takes damage
+        #tool found, subject attacks and tool takes damage (ignores corrupted tools)
         tool = board.toolAt(targetTX, targetTY)
-        if tool:
+        if tool and not getattr(tool, "corrupted", False):
             tool.takeDamage(self.dps * dt)
             board.hpChanged = True
             self._nudge(board, sepX, sepY, dt)
             return
+
 
         #finding center of tile
         targetX, targetY = targetTX + 0.5 + self.offsetX, targetTY + 0.5 + self.offsetY
@@ -199,7 +201,12 @@ class Enemy:
     @staticmethod
     def _walkable(board, fx, fy):
         tx, ty = math.floor(fx), math.floor(fy)
-        return board.inBounds(tx, ty) and not board.isCpu(tx, ty) and board.toolAt(tx, ty) is None and (tx, ty) not in board.plasmaTiles
+        if not board.inBounds(tx, ty) or board.isCpu(tx, ty) or (tx, ty) in board.plasmaTiles:
+            return False
+        tool = board.toolAt(tx, ty)
+        if tool is not None and not getattr(tool, "corrupted", False):
+            return False
+        return True
 
     @staticmethod
     def _adjacentTower(board, tileX, tileY):

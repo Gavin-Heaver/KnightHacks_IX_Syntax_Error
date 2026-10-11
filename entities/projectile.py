@@ -4,7 +4,7 @@ import config
 
 
 class Projectile:
-    def __init__(self, startX, startY, targetX, targetY, damage, speed=config.PROJECTILE_SPEED, maxRange=6.0, homingTarget=None, targetTool=None):
+    def __init__(self, startX, startY, targetX, targetY, damage, speed=config.PROJECTILE_SPEED, maxRange=6.0, homingTarget=None, targetTool=None, sourceTool=None):
         self.x = float(startX)
         self.y = float(startY)
         self.damage = float(damage)
@@ -15,6 +15,7 @@ class Projectile:
         self.hitRadius = 0.1    # tile distance to register a hit
         self.homingTarget = homingTarget
         self.targetTool = targetTool
+        self.sourceTool = sourceTool
 
         # Calculate normalized straight-line velocity vector
         dx = targetX - startX
@@ -66,10 +67,14 @@ class Projectile:
             self.alive = False
             return
 
-        # Check collision against friendly tools if projectile was fired by corrupted tool
+        # Check collision against good friendly tools if projectile was fired by corrupted tool
         if self.targetTool is not None:
             if board:
                 for tool in board.allTools():
+                    if tool == self.sourceTool:
+                        continue
+                    if getattr(tool, "corrupted", False):
+                        continue
                     if getattr(tool, "hp", 0) <= 0:
                         continue
                     d = math.hypot(self.x - (tool.x + 0.5), self.y - (tool.y + 0.5))
@@ -79,6 +84,7 @@ class Projectile:
                         self.alive = False
                         break
             return
+
 
         # Check collision against enemies
         for enemy in allEnemies:
