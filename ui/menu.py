@@ -74,16 +74,28 @@ class StartMenu:
         self.state = "main"    # "main", "scoreboard", "guide"
 
         # Fonts
-        self.titleFont = pygame.font.SysFont("consolas", 54, bold=True)
-        self.subFont = pygame.font.SysFont("consolas", 20)
-        self.btnFont = pygame.font.SysFont("consolas", 24, bold=True)
+        self.titleFont = pygame.font.SysFont("consolas", 68, bold=True)
+        self.subFont = pygame.font.SysFont("consolas", 24, bold=True)
+        self.btnFont = pygame.font.SysFont("consolas", 26, bold=True)
         self.bodyFont = pygame.font.SysFont("consolas", 18)
         self.headerFont = pygame.font.SysFont("consolas", 22, bold=True)
 
-        # Buttons
-        btnW, btnH = 320, 52
+        # Load and scale game logo (scaled up to 150x150)
+        self.logo = None
+        logoPath = os.path.join("assets", "pixil-frame-0-trans.png")
+        if not os.path.exists(logoPath):
+            logoPath = os.path.join("assets", "pixil-frame-0.png")
+        if os.path.exists(logoPath):
+            try:
+                rawLogo = pygame.image.load(logoPath).convert_alpha()
+                self.logo = pygame.transform.smoothscale(rawLogo, (150, 150))
+            except Exception as e:
+                print("Failed to load logo:", e)
+
+        # Scaled Up Buttons
+        btnW, btnH = 380, 54
         startX = (screenW - btnW) // 2
-        startY = screenH // 2 - 30
+        startY = 296
         gap = 68
 
         self.mainButtons = [
@@ -155,34 +167,35 @@ class StartMenu:
             pygame.draw.line(screen, gridCol, (0, y), (self.screenW, y), 1)
 
     def _drawMainView(self, screen):
-        # Title Glow & Text
-        titleText = "CODE TOWER DEFENSE"
+        # Game Logo at top (scaled up to 150x150)
+        if self.logo:
+            logoRect = self.logo.get_rect(center=(self.screenW // 2, 85))
+            screen.blit(self.logo, logoRect)
+
+        # Title Glow & Text: SYNTAX ERROR (68pt bold)
+        titleText = "SYNTAX ERROR"
         glowSurf = self.titleFont.render(titleText, True, (40, 140, 90))
         textSurf = self.titleFont.render(titleText, True, config.COLOR_CPU)
-        tRect = textSurf.get_rect(center=(self.screenW // 2, self.screenH // 4))
-        screen.blit(glowSurf, tRect.move(2, 2))
+        tRect = textSurf.get_rect(center=(self.screenW // 2, 195))
+        screen.blit(glowSurf, tRect.move(3, 3))
         screen.blit(textSurf, tRect)
 
-        # Subtitle
-        subText = "SYNTAX ERROR // KNIGHT HACKS IX // PYTHON 3 DEFENSE"
+        # Subtitle: CODE TOWER DEFENSE (24pt bold)
+        subText = "CODE TOWER DEFENSE // KNIGHT HACKS IX // PYTHON 3"
         subSurf = self.subFont.render(subText, True, (120, 160, 190))
-        sRect = subSurf.get_rect(center=(self.screenW // 2, self.screenH // 4 + 48))
+        sRect = subSurf.get_rect(center=(self.screenW // 2, 246))
         screen.blit(subSurf, sRect)
 
-        # Decorative bracket frame
-        bracketW = 420
-        bracketH = 340
+        # Scaled up decorative bracket frame around buttons (460x300)
+        bracketW = 460
+        bracketH = 300
         bx = (self.screenW - bracketW) // 2
-        by = self.screenH // 2 - 50
+        by = 280
         pygame.draw.rect(screen, (30, 48, 68), (bx, by, bracketW, bracketH), 1, border_radius=8)
 
         # Buttons
         for b in self.mainButtons:
             b.draw(screen, self.btnFont)
-
-        # Footer hint
-        tip = self.bodyFont.render("[ENTER / CLICK] Select    |    [ESC] Exit", True, (90, 120, 150))
-        screen.blit(tip, tip.get_rect(center=(self.screenW // 2, self.screenH - 30)))
 
     def _drawScoreboardView(self, screen):
         # Panel container (expanded to 880 px for clean column spacing)
@@ -259,7 +272,7 @@ class StartMenu:
             ("CONTROLS", [
                 "• Left Click: Place selected defense tool on grid.",
                 "• Right Click: Remove / sell existing tool (recovers 50% bytes).",
-                "• [B] Key: Spawn debug bug to probe pathfinding.",
+                "• [ENTER]: Begin wave immediately.",
                 "• [ESC]: Pause / Back to Menu.",
             ]),
             ("PROGRAMMING YOUR TOWERS", [

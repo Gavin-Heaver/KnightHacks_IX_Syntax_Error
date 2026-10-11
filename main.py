@@ -44,7 +44,7 @@ from ui.pauseMenu import PauseMenu
 random.seed(config.DEMO_SEED)   # deterministic demo (use only `random` for randomness)
 pygame.init()
 screen = pygame.display.set_mode((config.SCREEN_W, config.SCREEN_H))
-pygame.display.set_caption("Code Tower Defense")
+pygame.display.set_caption("Syntax Error: Code Tower Defense")
 clock = pygame.time.Clock()
 uiManager = pygame_gui.UIManager((config.SCREEN_W, config.SCREEN_H))
 running = True
