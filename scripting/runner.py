@@ -68,6 +68,7 @@ class TowerScript:
             validator.visit(tree)
             self.compiledCode = compile(tree, filename="<tower_script>", mode="exec")
             self.error = None
+            self.jammed = False
             return True
         except Exception as e:
             self.compiledCode = None

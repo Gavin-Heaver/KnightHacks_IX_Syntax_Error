@@ -95,6 +95,7 @@ class ShopPanel:
             else:
                 self.btnCompiler.set_text("NO COMPILER")
                 self.btnCompiler.disable()
+
         else:
             self.infoLabel.set_text("No Tower Selected")
             self.btnUpgrade.set_text("UPGRADE")
@@ -103,6 +104,28 @@ class ShopPanel:
             self.btnSell.disable()
             self.btnCompiler.set_text("OPEN COMPILER")
             self.btnCompiler.disable()
+
+        # Update Concept Unlock buttons state
+        if "for" in gameState.unlockedConcepts:
+            self.btnUnlockFor.set_text("[for] UNLOCKED")
+            self.btnUnlockFor.disable()
+        else:
+            self.btnUnlockFor.set_text("for Loops (40 B)")
+            self.btnUnlockFor.enable()
+
+        if "while" in gameState.unlockedConcepts:
+            self.btnUnlockWhile.set_text("[while] UNLOCKED")
+            self.btnUnlockWhile.disable()
+        else:
+            self.btnUnlockWhile.set_text("while Loops (40 B)")
+            self.btnUnlockWhile.enable()
+
+        if "memory" in gameState.unlockedConcepts:
+            self.btnUnlockMemory.set_text("[memory] UNLOCKED")
+            self.btnUnlockMemory.disable()
+        else:
+            self.btnUnlockMemory.set_text("memory Dict (30 B)")
+            self.btnUnlockMemory.enable()
 
     def handleEvent(self, event, gameState, selectedTool, board):
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
