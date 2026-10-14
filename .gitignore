@@ -1,8 +1,11 @@
-   __pycache__/
-   *.pyc
-   venv/
-   .venv/
-   build/
-   dist/
-   *.spec
-   .DS_Store
+__pycache__/
+*.pyc
+venv/
+.venv/
+build/
+dist/
+*.spec
+.DS_Store
+scoreboard.json
+audio_settings.json
+scratch/

@@ -190,7 +190,6 @@ def resetGame():
     fieldJobs = []
     paused = False
     phase = config.PHASE_MENU
-    events.subscribe("toolDestroyed", onToolDestroyed)
     events.subscribe("enemyKilled", onEnemyKilled)
 
 
