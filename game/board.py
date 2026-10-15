@@ -115,6 +115,10 @@ class Board:
             self._cachedPlasmaLinks, self._cachedPlasmaTiles, self._cachedDamagingTiles = self._calcPlasma()
         return self._cachedPlasmaLinks, self._cachedPlasmaTiles, self._cachedDamagingTiles
 
+    def isPlaceable(self, x, y):
+        m = config.BUILD_MARGIN
+        return (m <= x < self.width - m and m <= y < self.height - m and self.isBuildable(x, y))
+
     @property
     def plasmaTiles(self):
         _, tiles, _ = self.getPlasma()

@@ -14,6 +14,7 @@ BOARD_X = 16              # board's top-left pixel offset on screen
 BOARD_Y = 56
 BOARD_PX_W = GRID_W * TILE
 BOARD_PX_H = GRID_H * TILE 
+BUILD_MARGIN = 2
 # Right-hand side panel (shop / editor) starts at x = BOARD_X + BOARD_PX_W + 16
 # Bottom strip (console / HUD / graphs) starts at y = BOARD_Y + BOARD_PX_H + 16
 
@@ -55,9 +56,9 @@ FIX_CODE_COST = 15
 # ---------------------------------------------------------------- tools
 # cost, hp, range (tiles), dps
 TOOL_STATS = {
-    "debugger":  {"cost": 50, "hp": 30,  "range": 5.0, "dps": 8.0},
+    "debugger":  {"cost": 30, "hp": 30,  "range": 5.0, "dps": 8.0},
     "firewall":  {"cost": 30, "hp": 120, "range": 0.0, "dps": 0.0},
-    "antivirus": {"cost": 70, "hp": 40,  "range": 4.0, "dps": 4.0},
+    "antivirus": {"cost": 50, "hp": 40,  "range": 4.0, "dps": 4.0},
     "turret":    {"cost": 50, "hp": 30,  "range": 5.0, "dps": 8.0}, # alias
 }
 DEBUGGER_TIERS = [
@@ -79,11 +80,11 @@ FIREWALL_TIERS = [
 ]
 ANTIVIRUS_TIERS = [
     # Tier 1: passive damage (4.0 dps), NO slow
-    {"cycles": 30, "range": 4.0, "dps": 4.0, "slowFactor": 1.0, "passiveSlow": 1.0, "upgradeCost": 0},
+    {"cycles": 30, "range": 4.0, "dps": 4.0, "slow": 1.0, "upgradeCost": 0},
     # Tier 2: +25% damage (5.0 dps), current slow (0.50 targeted, 0.80 passive)
-    {"cycles": 60, "range": 4.5, "dps": 5.0, "slowFactor": 0.50, "passiveSlow": 0.80, "upgradeCost": 50},
+    {"cycles": 60, "range": 4.5, "dps": 5.0, "slow": 0.60, "upgradeCost": 50},
     # Tier 3: +50% damage from tier 1 (6.0 dps), further slow (0.25 targeted, 0.60 passive)
-    {"cycles": 100, "range": 5.0, "dps": 6.0, "slowFactor": 0.25, "passiveSlow": 0.60, "upgradeCost": 95},
+    {"cycles": 100, "range": 5.0, "dps": 6.0, "slow": 0.25, "upgradeCost": 95},
 ]
 TOOL_TIERS = {
     "debugger": DEBUGGER_TIERS,

@@ -57,7 +57,7 @@ try:
 except Exception:
     pass
 
-random.seed(config.DEMO_SEED)   # deterministic demo (use only `random` for randomness)
+random.seed()   # deterministic demo (use only `random` for randomness)
 pygame.init()
 
 # Set window and taskbar icon
@@ -112,7 +112,11 @@ board = Board()
 
 ### Move to game/board.py
 def onToolDestroyed(tool):
+    global selectedTool
     board.remove(tool.x, tool.y)
+    if selectedTool == tool:
+        selectedTool = None
+        codeEditor.close()
 
 events.subscribe("toolDestroyed", onToolDestroyed)
 ### Move to game/board.py
@@ -175,7 +179,7 @@ def resetGame():
     events.clearAll()
     events.subscribe("toolDestroyed", onToolDestroyed)
 
-    random.seed(config.DEMO_SEED)
+    random.seed()
     board = Board()
     gameState = GameState()                              # re-subscribes itself
     enemies = []
@@ -210,7 +214,7 @@ def drawBoard():
         prevRect = tileRect(hoverX, hoverY)
         prevSurf = pygame.Surface((prevRect.width, prevRect.height), pygame.SRCALPHA)
 
-        if board.isBuildable(hoverX, hoverY):
+        if board.isPlaceable(hoverX, hoverY):
             previewColor = (85, 250, 145)
             prevSurf.fill((65, 240, 135, 45))
             screen.blit(prevSurf, prevRect.topleft)
@@ -350,13 +354,6 @@ def drawBoard():
                 swY = dcy + int(math.sin(angle) * dr)
                 pygame.draw.line(screen, (255, 90, 90), (dcx, dcy), (swX, swY), 1)
 
-                # Active red tether beam to aimTarget
-                target = getattr(tool, "aimTarget", None)
-                if target is not None and getattr(target, "alive", True):
-                    tx = int(config.BOARD_X + target.x * config.TILE)
-                    ty = int(config.BOARD_Y + target.y * config.TILE)
-                    pygame.draw.line(screen, (255, 70, 70), (dcx, dcy), (tx, ty), 2)
-                    pygame.draw.circle(screen, (255, 180, 180), ((dcx + tx) // 2, (dcy + ty) // 2), 3)
             else:
                 pygame.draw.circle(auraSurf, (150, 60, 220, 22), (dr, dr), dr)
                 screen.blit(auraSurf, (dcx - dr, dcy - dr))
@@ -366,13 +363,6 @@ def drawBoard():
                 swY = dcy + int(math.sin(angle) * dr)
                 pygame.draw.line(screen, (200, 120, 255), (dcx, dcy), (swX, swY), 1)
 
-                # Active tether beam to aimTarget (if slow is unlocked)
-                target = getattr(tool, "aimTarget", None)
-                if target is not None and getattr(target, "alive", True) and getattr(tool, "slowFactor", 1.0) < 1.0:
-                    tx = int(config.BOARD_X + target.x * config.TILE)
-                    ty = int(config.BOARD_Y + target.y * config.TILE)
-                    pygame.draw.line(screen, (220, 130, 255), (dcx, dcy), (tx, ty), 2)
-                    pygame.draw.circle(screen, (255, 210, 255), ((dcx + tx) // 2, (dcy + ty) // 2), 3)
 
 
         # Floating mini-health bar on damaged tools/walls
@@ -394,7 +384,7 @@ def drawBoard():
         color = config.ENEMY_COLORS.get(e.type, config.COLOR_ENEMY)
 
         # Cyber slow aura ring
-        if getattr(e, "slowTimer", 0.0) > 0:
+        if e.isSlowed:
             slowR = radius + 3
             pygame.draw.circle(screen, (190, 120, 255), (int(px), int(py)), slowR, width=1)
 
@@ -564,7 +554,7 @@ while running:
                     audioManager.sfx("select")
                     codeEditor.close()
                     shopPanel.panel.show()
-                elif board.isBuildable(tx, ty):
+                elif board.isPlaceable(tx, ty):
                     toolType = shopPanel.selectedToolType
                     cost = config.TOOL_STATS[toolType]["cost"]
                     if gameState.spendBytes(cost):
@@ -619,6 +609,8 @@ while running:
 
             # board changed (place / remove / destroy) -> rebuild everything now so nobody walks into a new tool
             if board.dirty:
+                for e in enemies:
+                    e.unstick(board)
                 fields = buildFields(board, pheromones.grid)
                 board.dirty = False
                 board.hpChanged = False
