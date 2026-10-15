@@ -37,14 +37,6 @@ class DefenseTool:
     def corrupt(self):
         pass
 
-
-class FakeTool(DefenseTool):
-    """Stub so the AI side can test pathing/costs before real tools exist."""
-
-    def __init__(self, x=0, y=0, programmable=False):
-        super().__init__("debugger", x, y)
-        self.programmable = programmable
-
 class Debugger(DefenseTool):
     """
     Programmable defense attacker (formerly Turret).
@@ -254,8 +246,7 @@ class Antivirus(DefenseTool):
         """Loads stats (range, slowFactor, passiveSlow, dps, cycles) from config.ANTIVIRUS_TIERS based on self.tier."""
         tierData = config.ANTIVIRUS_TIERS[self.tier]
         self.range = tierData["range"]
-        self.slowFactor = tierData["slowFactor"]
-        self.passiveSlow = tierData.get("passiveSlow", 1.0)
+        self.slow = tierData["slow"]
         self.dps = tierData.get("dps", 4.0)
         self.cycleBudget = tierData["cycles"]
 
@@ -272,16 +263,13 @@ class Antivirus(DefenseTool):
 
 
     def update(self, dt, allEnemies, newProjectilesList, unlockedConcepts=None, board=None):
-        # 1. Update radar sweep angle
+        # Radar sweep angle (visual only)
         self.scanAngle = (self.scanAngle + 3.0 * dt) % (2 * math.pi)
-
         cx, cy = self.x + 0.5, self.y + 0.5
 
         if getattr(self, "corrupted", False):
-            # Corrupted Debugger:
-            # - Does NO damage to bugs.
-            # - Deals small damage (20% of tier dps) to friendly tools in range.
-            # - Reverses slowdown on bugs inside its sphere (speeds them up at the same rate).
+            # Corrupted: no damage to enemies, small damage to friendly pylons in range,
+            # and the slow is reversed into a speed-up.
             if board is not None and self.dps > 0:
                 corruptedDps = self.dps * 0.20
                 for t in board.allTools():
@@ -290,58 +278,22 @@ class Antivirus(DefenseTool):
                             t.takeDamage(corruptedDps * dt)
                             board.hpChanged = True
 
-            revPassive = (1.0 + (1.0 - self.passiveSlow)) if self.passiveSlow < 1.0 else 1.0
-            revTarget = (1.0 + (1.0 - self.slowFactor)) if self.slowFactor < 1.0 else 1.0
-
-            closestEnemy = None
-            closestDist = 999.0
-
+            boost = 1.0 + (1.0 - self.slow)          # 0.60 slow -> 1.40 speed-up; 1.0 -> no change
             for enemy in allEnemies:
-                if getattr(enemy, "alive", True):
-                    dist = math.hypot(enemy.x - cx, enemy.y - cy)
-                    if dist <= self.range:
-                        enemy.revealed = True
-                        if revPassive > 1.0:
-                            enemy.applySlow(factor=revPassive, duration=0.2)
-                        if dist < closestDist:
-                            closestDist = dist
-                            closestEnemy = enemy
-
-            if closestEnemy is not None:
-                self.aimTarget = closestEnemy
-                if revTarget > 1.0:
-                    self.aimTarget.applySlow(factor=revTarget, duration=0.35)
-            else:
-                self.aimTarget = None
-            self.wantsToSlow = False
+                if enemy.alive and math.hypot(enemy.x - cx, enemy.y - cy) <= self.range:
+                    enemy.applySlow(boost)
             return
 
-        # 2. Run Python script ~8x/sec
+        # Script still ticks (replaced in Phase 3)
         self.scriptTimer += dt
-        tickInterval = 1.0 / config.SCRIPT_TICKS_PER_SECOND
-        if self.scriptTimer >= tickInterval:
+        if self.scriptTimer >= 1.0 / config.SCRIPT_TICKS_PER_SECOND:
             self.scriptTimer = 0.0
             self.script.runTick(self, allEnemies, self.cycleBudget, unlockedConcepts)
 
-        # 3. Support Aura: reveal all enemies within scanner range, deal passive damage, and slow (if unlocked)
+        # Aura: damage and slow everything in range
         for enemy in allEnemies:
-            if getattr(enemy, "alive", True):
-                dist = math.hypot(enemy.x - cx, enemy.y - cy)
-                if dist <= self.range:
-                    enemy.revealed = True
-                    # Passive sphere damage over time
-                    if self.dps > 0:
-                        enemy.takeDamage(self.dps * dt)
-                    # Base passive slow inside the sphere (only if unlocked by tier >= 1)
-                    if self.passiveSlow < 1.0:
-                        enemy.applySlow(factor=self.passiveSlow, duration=0.2)
-
-        # 4. Focused tether slow (only if unlocked by tier >= 1)
-        if self.aimTarget is not None and getattr(self.aimTarget, "alive", True):
-            dist = math.hypot(self.aimTarget.x - cx, self.aimTarget.y - cy)
-            if dist <= self.range:
-                if self.slowFactor < 1.0:
-                    self.aimTarget.applySlow(factor=self.slowFactor, duration=0.35)
-            else:
-                self.aimTarget = None
-        self.wantsToSlow = False
+            if enemy.alive and math.hypot(enemy.x - cx, enemy.y - cy) <= self.range:
+                enemy.revealed = True
+                if self.dps > 0:
+                    enemy.takeDamage(self.dps * dt)
+                enemy.applySlow(self.slow)

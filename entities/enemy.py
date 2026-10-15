@@ -34,16 +34,15 @@ class Enemy:
         self.spotY = cpuCenterY + math.sin(angle) * ringRadius
         self.wantsTP = False
         self.tpCooldown = 0.0
-        self.slowTimer = 0.0
         self.slowFactor = 1.0
+        self.boostFactor = 1.0
+        self.isSlowed = False
 
     def applySlow(self, factor=0.5, duration=1.0):
-        """Temporarily slows or speeds up the enemy's movement speed."""
-        self.slowTimer = max(self.slowTimer, duration)
-        if factor > 1.0:
-            self.slowFactor = max(self.slowFactor, factor)
-        else:
+        if factor < 1.0:
             self.slowFactor = min(self.slowFactor, factor)
+        else:
+            self.slowFactor = max(self.slowFactor, factor)
 
     def takeDamage(self, n):
         if not self.alive:
@@ -58,13 +57,14 @@ class Enemy:
             self.wantsTP = True
 
     def update(self, dt, board, dist, enemies):
+        self._act(dt, board, dist, enemies)
+        self.isSlowed = self.slowFactor < 1.0
+        self.slowFactor = 1.0
+        self.boostFactor = 1.0    
+
+    def _act(self, dt, board, dist, enemies):
         if not self.alive:
             return
-
-        if self.slowTimer > 0:
-            self.slowTimer -= dt
-            if self.slowTimer <= 0:
-                self.slowFactor = 1.0
 
         if self.tpCooldown > 0:
             self.tpCooldown -= dt
@@ -151,7 +151,7 @@ class Enemy:
         distance = math.hypot(sepX, sepY)
         if distance > 1:
             sepX, sepY = sepX / distance, sepY / distance
-        push = (self.speed * self.slowFactor) * dt * 0.5
+        push = (self.speed * self.slowFactor * self.boostFactor) * dt * 0.5
         self._tryMove(board, self.x + sepX * push,self.y + sepY * push)
 
     def _tryMove(self, board, newX, newY):
@@ -197,7 +197,7 @@ class Enemy:
         length = math.hypot(dirX, dirY)
         if length == 0:
             return
-        move = (self.speed * self.slowFactor) * dt
+        move = (self.speed * self.slowFactor * self.boostFactor) * dt
         self._tryMove(board, self.x + dirX / length * move, self.y + dirY / length * move)
 
     @staticmethod
@@ -223,3 +223,22 @@ class Enemy:
         nearX = min(max(self.x, config.CPU_X), config.CPU_X + config.CPU_W)
         nearY = min(max(self.y, config.CPU_Y), config.CPU_Y + config.CPU_H)
         return math.hypot(self.x - nearX, self.y - nearY) <= self.size + 0.3
+
+    def unstick(self, board):
+        if self._walkable(board, self.x, self.y):
+            return
+        start = (math.floor(self.x), math.floor(self.y))
+        seen = {start}
+        frontier = [start]
+        while frontier:
+            nextFrontier = []
+            for tx, ty in frontier:
+                for nx, ny in board.neighbors(tx, ty):
+                    if (nx, ny) in seen:
+                        continue
+                    seen.add((nx, ny))
+                    if self._walkable(board, nx + 0.5, ny + 0.5):
+                        self.x, self.y = nx + 0.5, ny + 0.5
+                        return
+                    nextFrontier.append((nx, ny))
+            frontier = nextFrontier

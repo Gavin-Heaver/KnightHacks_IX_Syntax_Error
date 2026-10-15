@@ -58,12 +58,13 @@ def makeCost(board, enemyType, fire, fear, fireWeight = None):
 
 def toolTargetTiles(board):
     targets = set()
+    plasma = board.plasmaTiles
     for tool in board.allTools():
         if tool.kind not in ("debugger", "antivirus", "turret") or getattr(tool, "corrupted", False):
             continue
 
         for nx, ny in board.neighbors(tool.x, tool.y):
-            if board.isBuildable(nx, ny):
+            if board.isBuildable(nx, ny) and (nx, ny) not in plasma:
                 targets.add((nx, ny))
     return list(targets)
 
